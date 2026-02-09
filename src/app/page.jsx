@@ -50,8 +50,21 @@ export default function Home() {
     const activeSide = activeStep < LEFT_PROJECTS.length ? 'left' : 'right';
     const activeIndex = activeSide === 'left' ? activeStep : activeStep - LEFT_PROJECTS.length;
 
+    const previewRef = useRef(null);
+
     const pause = useCallback(() => { pausedRef.current = true; }, []);
     const resume = useCallback(() => { pausedRef.current = false; }, []);
+
+    useEffect(() => {
+        if (!expanded) return;
+        const handleClickOutside = (e) => {
+            if (previewRef.current && !previewRef.current.contains(e.target)) {
+                setExpanded(false);
+            }
+        };
+        window.addEventListener('mousedown', handleClickOutside, true);
+        return () => window.removeEventListener('mousedown', handleClickOutside, true);
+    }, [expanded]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -94,10 +107,11 @@ export default function Home() {
                 </nav>
 
                 <motion.div
+                    ref={previewRef}
                     className={`${styles.preview} ${expanded ? styles.previewExpanded : ''}`}
                     aria-label="Project preview area"
                     layout
-                    onClick={() => setExpanded(!expanded)}
+                    onClick={() => { if (!expanded) setExpanded(true); }}
                     style={{ cursor: 'pointer' }}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
                 >
