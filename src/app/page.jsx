@@ -12,7 +12,7 @@ const LEFT_PROJECTS = [
         subtitle: 'Product Strategy',
     },
     {
-        name: 'Nebula Workspace',
+        name: 'Nebula',
         tag: 'Productivity',
         subtitle: 'Interface Systems',
     },
