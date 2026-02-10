@@ -55,21 +55,22 @@
     padding: 0;
     cursor: pointer;
     font-family: inherit;
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    transition: transform 0.25s ease, opacity 0.25s ease, color 0.25s ease;
     opacity: 0.7;
+    color: rgba(0, 0, 0, 0.75);
     transform-origin: left center;
 }
 
 .projectItemActive {
     transform: scale(1.06);
     opacity: 1;
+    color: #000000;
 }
 
 .projectNameRow {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 4px;
 }
 
 .projectName {
@@ -87,6 +88,20 @@
     font-size: 12px;
     letter-spacing: -0.02em;
     color: rgba(0, 0, 0, 0.5);
+    display: block;
+    margin-top: 2px;
+}
+
+.projectSubtitleBounce {
+    animation: subtitleBounce 0.8s ease-in-out;
+}
+
+@keyframes subtitleBounce {
+    0% { margin-top: 2px; }
+    15% { margin-top: -2px; }
+    50% { margin-top: -2px; }
+    65% { margin-top: 8px; }
+    100% { margin-top: 2px; }
 }
 
 /* Center preview placeholder */

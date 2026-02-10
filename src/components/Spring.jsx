@@ -11,8 +11,8 @@ export default function Spring() {
     if (isAnimating) return;
     setIsAnimating(true);
     await controls.start({
-      scaleY: [1, 0.5, 1.2, 1],
-      transition: { duration: 0.6, times: [0, 0.25, 0.55, 1], ease: 'easeInOut' },
+      scaleY: [1, 0.3, 0.3, 1.25, 1],
+      transition: { duration: 1, times: [0, 0.15, 0.5, 0.65, 1], ease: 'easeInOut' },
     });
     setIsAnimating(false);
   };

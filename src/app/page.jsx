@@ -5,6 +5,35 @@ import { motion } from 'framer-motion';
 import styles from '@/styles/Home.module.css';
 import Spring from '@/components/Spring';
 
+function ProjectItem({ project, isActive, onHover }) {
+    const [bouncing, setBouncing] = useState(false);
+
+    const handleMouseEnter = () => {
+        onHover();
+        if (bouncing) return;
+        setBouncing(true);
+    };
+
+    return (
+        <button
+            type="button"
+            className={`${styles.projectItem} ${isActive ? styles.projectItemActive : ''}`}
+            onMouseEnter={handleMouseEnter}
+        >
+            <div className={styles.projectNameRow}>
+                <span className={styles.projectName}>{project.name}</span>
+                <span className={styles.projectTag}>{project.tag}</span>
+            </div>
+            <span
+                className={`${styles.projectSubtitle} ${bouncing ? styles.projectSubtitleBounce : ''}`}
+                onAnimationEnd={() => setBouncing(false)}
+            >
+                {project.subtitle}
+            </span>
+        </button>
+    );
+}
+
 const LEFT_PROJECTS = [
     {
         name: 'Helios Analytics',
@@ -89,20 +118,12 @@ export default function Home() {
             <section className={styles.layout} onMouseEnter={pause} onMouseLeave={resume}>
                 <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation left">
                     {LEFT_PROJECTS.map((project, index) => (
-                        <button
+                        <ProjectItem
                             key={`left-${project.name}-${index}`}
-                            type="button"
-                            className={`${styles.projectItem} ${
-                                activeSide === 'left' && index === activeIndex ? styles.projectItemActive : ''
-                            }`}
-                            onMouseEnter={() => setActiveStep(index)}
-                        >
-                            <div className={styles.projectNameRow}>
-                                <span className={styles.projectName}>{project.name}</span>
-                                <span className={styles.projectTag}>{project.tag}</span>
-                            </div>
-                            <span className={styles.projectSubtitle}>{project.subtitle}</span>
-                        </button>
+                            project={project}
+                            isActive={activeSide === 'left' && index === activeIndex}
+                            onHover={() => setActiveStep(index)}
+                        />
                     ))}
                 </nav>
 
@@ -124,20 +145,12 @@ export default function Home() {
 
                 <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation right">
                     {RIGHT_PROJECTS.map((project, index) => (
-                        <button
+                        <ProjectItem
                             key={`right-${project.name}-${index}`}
-                            type="button"
-                            className={`${styles.projectItem} ${
-                                activeSide === 'right' && index === activeIndex ? styles.projectItemActive : ''
-                            }`}
-                            onMouseEnter={() => setActiveStep(LEFT_PROJECTS.length + index)}
-                        >
-                            <div className={styles.projectNameRow}>
-                                <span className={styles.projectName}>{project.name}</span>
-                                <span className={styles.projectTag}>{project.tag}</span>
-                            </div>
-                            <span className={styles.projectSubtitle}>{project.subtitle}</span>
-                        </button>
+                            project={project}
+                            isActive={activeSide === 'right' && index === activeIndex}
+                            onHover={() => setActiveStep(LEFT_PROJECTS.length + index)}
+                        />
                     ))}
                 </nav>
             </section>
