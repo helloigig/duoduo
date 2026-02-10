@@ -70,11 +70,21 @@ const RIGHT_PROJECTS = [
     },
 ];
 
+const ALL_PROJECTS = [...LEFT_PROJECTS, ...RIGHT_PROJECTS];
+
+const MOBILE_ITEM_HEIGHT = 52;
+const LOOP_COUNT = 20;
+const LOOPED_PROJECTS = Array.from({ length: LOOP_COUNT }, () => ALL_PROJECTS).flat();
+
 export default function Home() {
-    const total = LEFT_PROJECTS.length + RIGHT_PROJECTS.length;
+    const total = ALL_PROJECTS.length;
     const [activeStep, setActiveStep] = useState(0);
     const [expanded, setExpanded] = useState(false);
     const pausedRef = useRef(false);
+    const scrollContainerRef = useRef(null);
+    const isUserScrolling = useRef(false);
+    const isRecentering = useRef(false);
+    const scrollTimeout = useRef(null);
 
     const activeSide = activeStep < LEFT_PROJECTS.length ? 'left' : 'right';
     const activeIndex = activeSide === 'left' ? activeStep : activeStep - LEFT_PROJECTS.length;
@@ -95,9 +105,67 @@ export default function Home() {
         return () => window.removeEventListener('mousedown', handleClickOutside, true);
     }, [expanded]);
 
+    // Initialize scroll position to center of looped list
+    const midStart = Math.floor(LOOP_COUNT / 2) * total;
+    useEffect(() => {
+        const el = scrollContainerRef.current;
+        if (el) {
+            el.scrollTop = midStart * MOBILE_ITEM_HEIGHT;
+        }
+    }, [midStart]);
+
+    // Detect which item is centered on scroll + recenter when near edges
+    useEffect(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+
+        const lowerBound = total * 3 * MOBILE_ITEM_HEIGHT;
+        const upperBound = total * (LOOP_COUNT - 3) * MOBILE_ITEM_HEIGHT;
+
+        const handleScroll = () => {
+            if (isRecentering.current) return;
+
+            const containerCenter = el.scrollTop + el.clientHeight / 2;
+            const idx = Math.floor(containerCenter / MOBILE_ITEM_HEIGHT);
+            const realIdx = ((idx % total) + total) % total;
+            setActiveStep(realIdx);
+
+            // Silently recenter when approaching edges
+            if (el.scrollTop < lowerBound || el.scrollTop > upperBound) {
+                isRecentering.current = true;
+                const currentIdx = Math.round(el.scrollTop / MOBILE_ITEM_HEIGHT);
+                const equivalent = (currentIdx % total) + midStart;
+                el.style.scrollBehavior = 'auto';
+                el.scrollTop = equivalent * MOBILE_ITEM_HEIGHT;
+                el.style.scrollBehavior = '';
+                requestAnimationFrame(() => {
+                    isRecentering.current = false;
+                });
+            }
+
+            // Pause autoplay while user scrolls
+            isUserScrolling.current = true;
+            pausedRef.current = true;
+            clearTimeout(scrollTimeout.current);
+            scrollTimeout.current = setTimeout(() => {
+                isUserScrolling.current = false;
+                pausedRef.current = false;
+            }, 2000);
+        };
+
+        el.addEventListener('scroll', handleScroll, { passive: true });
+        return () => el.removeEventListener('scroll', handleScroll);
+    }, [total, midStart]);
+
+    // Autoplay: mobile scrolls the list, desktop increments activeStep
     useEffect(() => {
         const interval = setInterval(() => {
-            if (!pausedRef.current && !expanded) {
+            if (pausedRef.current || expanded) return;
+
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile && scrollContainerRef.current) {
+                scrollContainerRef.current.scrollBy({ top: MOBILE_ITEM_HEIGHT, behavior: 'smooth' });
+            } else if (!isMobile) {
                 setActiveStep((prev) => (prev + 1) % total);
             }
         }, 4000);
@@ -153,6 +221,39 @@ export default function Home() {
                         />
                     ))}
                 </nav>
+            </section>
+
+            {/* Mobile layout */}
+            <section className={styles.mobileLayout}>
+                <div
+                    ref={scrollContainerRef}
+                    className={styles.mobileScrollContainer}
+                >
+                    {LOOPED_PROJECTS.map((project, i) => {
+                        const realIndex = i % total;
+                        const isActive = realIndex === activeStep;
+                        return (
+                            <div
+                                key={`mobile-${i}`}
+                                className={`${styles.mobileProjectItem} ${isActive ? styles.projectItemActive : styles.projectItem}`}
+                                style={{ height: MOBILE_ITEM_HEIGHT, minHeight: MOBILE_ITEM_HEIGHT }}
+                            >
+                                <div className={styles.projectNameRow}>
+                                    <span className={styles.projectName}>{project.name}</span>
+                                    <span className={styles.projectTag}>{project.tag}</span>
+                                </div>
+                                <span className={styles.projectSubtitle}>{project.subtitle}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className={styles.mobilePreview}>
+                    <div className={styles.previewInner}>
+                        <span className={styles.previewLabel}>
+                            {ALL_PROJECTS[activeStep].name}
+                        </span>
+                    </div>
+                </div>
             </section>
 
             {/* Bottom navigation */}

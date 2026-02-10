@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
+import styles from '@/styles/Spring.module.css';
 
 export default function Spring() {
   const controls = useAnimationControls();
@@ -21,7 +22,7 @@ export default function Spring() {
     <motion.img
       src="/duoduo.svg"
       alt="DuoDuo"
-      style={{ height: 44, width: 'auto' }}
+      className={styles.logo}
       animate={controls}
       onMouseEnter={handleHover}
     />

@@ -16,3 +16,13 @@ body {
   min-height: 100vh;
   font-family: var(--font-geist-sans), sans-serif;
 }
+
+@media (max-width: 768px) {
+  html,
+  body {
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+}
