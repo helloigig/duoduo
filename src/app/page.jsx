@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import styles from '@/styles/Home.module.css';
 import Spring from '@/components/Spring';
@@ -258,12 +259,12 @@ export default function Home() {
 
             {/* Bottom navigation */}
             <footer className={styles.bottomNav} aria-label="Site navigation">
-                <button type="button" className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
+                <Link href="/" className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
                     Work
-                </button>
-                <button type="button" className={styles.bottomNavItem}>
+                </Link>
+                <Link href="/about" className={styles.bottomNavItem}>
                     About
-                </button>
+                </Link>
                 <button type="button" className={styles.bottomNavItem}>
                     Collaborate
                 </button>
