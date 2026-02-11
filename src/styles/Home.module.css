@@ -29,9 +29,9 @@
 /* Center layout */
 .layout {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     display: grid;
-    grid-template-columns: 220px minmax(0, 1fr) 220px;
+    grid-template-columns: 220px minmax(360px, 1fr) 220px;
     column-gap: 80px;
     align-items: center;
 }

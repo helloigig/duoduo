@@ -14,16 +14,18 @@ function randomRotation() {
 }
 
 const ITEMS = [
-    { id: 'poster', x: '20%', y: '15%', rotation: -6 },
-    { id: 'card1', x: '25%', y: '18%', rotation: 2 },
-    { id: 'receipt', x: '40%', y: '22%', rotation: -1 },
-    { id: 'bluePoster', x: '52%', y: '22%', rotation: -4 },
-    { id: 'card2', x: '52%', y: '19%', rotation: -3 }
+    { id: 'poster', x: '33%', y: '44%', rotation: -6 },
+    { id: 'card1', x: '35%', y: '47%', rotation: 2 },
+    { id: 'receipt', x: '50%', y: '51%', rotation: -1 },
+    { id: 'bluePoster', x: '70%', y: '51%', rotation: -4 },
+    { id: 'card2', x: '66%', y: '44%', rotation: -3 }
 ];
 
 export default function About() {
     const canvasRef = useRef(null);
+    const innerRef = useRef(null);
     const topZRef = useRef(10);
+
     const [zIndices, setZIndices] = useState(() => {
         const initial = {};
         ITEMS.forEach((item, i) => { initial[item.id] = i + 1; });
@@ -53,8 +55,6 @@ export default function About() {
         return {
             className: styles.canvasItem,
             drag: true,
-            dragConstraints: canvasRef,
-            dragElastic: 0.1,
             dragMomentum: false,
             animate: { rotate: rotations[id] },
             transition: { type: 'spring', stiffness: 300, damping: 20 },
@@ -73,11 +73,13 @@ export default function About() {
                 </div>
             </header>
 
+            <div ref={innerRef} className={styles.canvasInner}>
             <motion.div {...itemProps('poster')}>
-                <Poster />
+                <div className={styles.canvasItemInner}><Poster /></div>
             </motion.div>
 
             <motion.div {...itemProps('card1')}>
+                <div className={styles.canvasItemInner}>
                 <NameCard
                     pronoun="her"
                     name="K"
@@ -86,13 +88,17 @@ export default function About() {
                     facts="Kiwi designs interfaces for things that exist in both physical and digital worlds. Kiwi believes good interaction should survive engineering, manufacturing, and bad network conditions. Kiwi can prototype ideas before meetings end. Kiwi writes code when necessary. Kiwi is calm under complex constraints."
                     assignment="Turning complex systems into experiences that feel inevitable."
                 />
+                </div>
             </motion.div>
 
             <motion.div {...itemProps('receipt')}>
+                <div className={styles.canvasItemInner}>
                 <img src="/receipt.png" alt="DuoDuo Receipt" draggable={false} />
+                </div>
             </motion.div>
 
             <motion.div {...itemProps('card2')}>
+                <div className={styles.canvasItemInner}>
                 <NameCard
                     pronoun="her"
                     name="W"
@@ -101,11 +107,13 @@ export default function About() {
                     facts="Gigi designs experiences for products that think. Gigi turns complex AI systems into stories humans can understand. Gigi believes brand is not decoration, but a decision-making tool. Gigi leads with narrative, then builds systems to support it. Gigi sees the product as a whole before others see features."
                     assignment="Helping AI products feel less like systems and more like something you can trust."
                 />
+                </div>
             </motion.div>
 
             <motion.div {...itemProps('bluePoster')}>
-                <BluePoster />
+                <div className={styles.canvasItemInner}><BluePoster /></div>
             </motion.div>
+            </div>
 
             {/* Bottom navigation */}
             <footer className={styles.bottomNav} aria-label="Site navigation">

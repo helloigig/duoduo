@@ -26,20 +26,34 @@
     pointer-events: auto;
 }
 
+/* Fixed-width inner container so % positions stay constant */
+.canvasInner {
+    position: relative;
+    max-width: 1440px;
+    height: 100%;
+    margin: 0 auto;
+}
+
 /* Draggable canvas items */
 .canvasItem {
     position: absolute;
-    cursor: grab;
-    user-select: none;
+    transform-origin: 0 0;
+    pointer-events: none;
 }
 
-.canvasItem:active {
+.canvasItemInner {
+    transform: translate(-50%, -50%);
+    cursor: grab;
+    user-select: none;
+    pointer-events: auto;
+}
+
+.canvasItemInner:active {
     cursor: grabbing;
 }
 
 .canvasItem img {
-    height: 60vh;
-    width: auto;
+    width: 230px;
     display: block;
     pointer-events: none;
     -webkit-user-drag: none;
