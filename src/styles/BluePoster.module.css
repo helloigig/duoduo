@@ -1,0 +1,83 @@
+.poster {
+    width: 440px;
+    height: 500px;
+    background-color: #315BA1;
+    color: #ffffff;
+    font-family: var(--font-geist-mono), monospace;
+    display: flex;
+    flex-direction: row;
+    padding: 48px 36px 48px 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Left column — punch holes */
+.holes {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    padding: 8px 0;
+    margin-right: 20px;
+}
+
+.hole {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #ffffff;
+}
+
+/* Right column — text content */
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.top {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+}
+
+.title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-align: center;
+}
+
+.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.list li {
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    text-align: left;
+}
+
+.list li::before {
+    content: '• ';
+}
+
+.tagline {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-align: center;
+}

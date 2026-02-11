@@ -1,45 +1,34 @@
-/* Overall page */
-.page {
-    min-height: 100vh;
+/* Canvas = full page */
+.canvas {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
     background-color: #ffffff;
     color: #000000;
     font-family: var(--font-geist-sans), sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 40px 80px 48px;
-    box-sizing: border-box;
 }
 
-/* Top logo / spring */
+/* Top logo / spring — overlaid */
 .logoContainer {
-    width: 100%;
+    position: absolute;
+    top: 40px;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: center;
-    margin-bottom: 40px;
+    z-index: 10;
+    pointer-events: none;
 }
 
 .logoSpring {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Canvas area */
-.canvas {
-    flex: 1;
-    position: relative;
-    width: 100%;
-    max-width: 1200px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    pointer-events: auto;
 }
 
 /* Draggable canvas items */
 .canvasItem {
+    position: absolute;
     cursor: grab;
     user-select: none;
 }
@@ -56,11 +45,16 @@
     -webkit-user-drag: none;
 }
 
-/* Bottom navigation */
+/* Bottom navigation — overlaid */
 .bottomNav {
+    position: absolute;
+    bottom: 48px;
+    left: 0;
+    right: 0;
     display: flex;
+    justify-content: center;
     gap: 16px;
-    margin-top: 48px;
+    z-index: 10;
 }
 
 .bottomNavItem {
@@ -82,18 +76,11 @@
 
 /* Responsive: Mobile */
 @media (max-width: 768px) {
-    .page {
-        height: 100dvh;
-        min-height: 0;
-        padding: 20px 0 20px;
-        overflow: hidden;
-    }
-
     .logoContainer {
-        margin-bottom: 12px;
+        top: 20px;
     }
 
     .bottomNav {
-        margin-top: 24px;
+        bottom: 20px;
     }
 }

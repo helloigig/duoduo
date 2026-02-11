@@ -1,0 +1,32 @@
+.poster {
+    width: 400px;
+    height: 540px;
+    background-color: #ffe100;
+    color: #000000;
+    font-family: var(--font-geist-sans), sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 36px 36px 36px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.logo {
+    width: 100%;
+}
+
+.lines {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 70px;
+}
+
+.lines p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.5;
+}
