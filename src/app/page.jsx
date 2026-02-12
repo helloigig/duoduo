@@ -1,10 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import styles from '@/styles/Home.module.css';
-import Spring from '@/components/Spring';
 
 function ProjectItem({ project, isActive, onHover }) {
     const [bouncing, setBouncing] = useState(false);
@@ -176,13 +174,6 @@ export default function Home() {
 
     return (
         <main className={styles.page}>
-            {/* Top logo / spring */}
-            <header className={styles.logoContainer}>
-                <div className={styles.logoSpring}>
-                    <Spring />
-                </div>
-            </header>
-
             {/* Center layout: left / preview / right */}
             <section className={styles.layout} onMouseEnter={pause} onMouseLeave={resume}>
                 <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation left">
@@ -257,18 +248,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Bottom navigation */}
-            <footer className={styles.bottomNav} aria-label="Site navigation">
-                <Link href="/" className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
-                    Work
-                </Link>
-                <Link href="/about" className={styles.bottomNavItem}>
-                    About
-                </Link>
-                <button type="button" className={styles.bottomNavItem}>
-                    Collaborate
-                </button>
-            </footer>
         </main>
     );
 }

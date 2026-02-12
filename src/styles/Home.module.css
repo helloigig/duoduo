@@ -1,29 +1,15 @@
 /* Overall page */
 .page {
-    min-height: 100vh;
+    flex: 1;
     background-color: #ffffff;
     color: #000000;
     font-family: var(--font-geist-sans), sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 40px 80px 48px;
+    justify-content: center;
+    padding: 100px 80px;
     box-sizing: border-box;
-}
-
-/* Top logo / spring */
-.logoContainer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 40px;
-}
-
-.logoSpring {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* Center layout */
@@ -144,30 +130,6 @@
     aspect-ratio: 4 / 3;
 }
 
-/* Bottom navigation */
-.bottomNav {
-    display: flex;
-    gap: 16px;
-    margin-top: 48px;
-}
-
-.bottomNavItem {
-    background: transparent;
-    border: none;
-    font-family: inherit;
-    padding: 4px 8px;
-    font-size: 14px;
-    letter-spacing: -0.02em;
-    cursor: pointer;
-    color: rgba(0, 0, 0, 0.4);
-    text-decoration: none;
-}
-
-.bottomNavItemActive {
-    background-color: #ffe100;
-    color: #000000;
-}
-
 /* Mobile layout — hidden on desktop */
 .mobileLayout {
     display: none;
@@ -243,14 +205,9 @@
 /* Responsive: Mobile */
 @media (max-width: 768px) {
     .page {
-        height: 100dvh;
         min-height: 0;
-        padding: 20px 0 20px;
+        padding: 60px 0 66px;
         overflow: hidden;
-    }
-
-    .logoContainer {
-        margin-bottom: 12px;
     }
 
     .layout {
@@ -273,9 +230,5 @@
         width: 100%;
         aspect-ratio: 4 / 3;
         margin-top: 16px;
-    }
-
-    .bottomNav {
-        margin-top: 24px;
     }
 }

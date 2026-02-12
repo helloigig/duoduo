@@ -2,28 +2,11 @@
 .canvas {
     position: relative;
     width: 100%;
-    height: 100vh;
-    height: 100dvh;
+    flex: 1;
     overflow: hidden;
     background-color: #ffffff;
     color: #000000;
     font-family: var(--font-geist-sans), sans-serif;
-}
-
-/* Top logo / spring — overlaid */
-.logoContainer {
-    position: absolute;
-    top: 40px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    z-index: 10;
-    pointer-events: none;
-}
-
-.logoSpring {
-    pointer-events: auto;
 }
 
 /* Fixed-width inner container so % positions stay constant */
@@ -59,42 +42,3 @@
     -webkit-user-drag: none;
 }
 
-/* Bottom navigation — overlaid */
-.bottomNav {
-    position: absolute;
-    bottom: 48px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    z-index: 10;
-}
-
-.bottomNavItem {
-    background: transparent;
-    border: none;
-    font-family: inherit;
-    padding: 4px 8px;
-    font-size: 14px;
-    letter-spacing: -0.02em;
-    cursor: pointer;
-    color: rgba(0, 0, 0, 0.4);
-    text-decoration: none;
-}
-
-.bottomNavItemActive {
-    background-color: #ffe100;
-    color: #000000;
-}
-
-/* Responsive: Mobile */
-@media (max-width: 768px) {
-    .logoContainer {
-        top: 20px;
-    }
-
-    .bottomNav {
-        bottom: 20px;
-    }
-}

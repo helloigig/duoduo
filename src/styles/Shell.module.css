@@ -1,0 +1,88 @@
+/* Persistent shell: logo + content + nav */
+.shell {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    color: #000000;
+    font-family: var(--font-geist-sans), sans-serif;
+}
+
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+/* Top logo — fixed overlay */
+.logoContainer {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.logoSpring {
+    pointer-events: auto;
+}
+
+/* Bottom navigation — fixed overlay */
+.bottomNav {
+    position: fixed;
+    bottom: 48px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.bottomNavItem {
+    position: relative;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    padding: 4px 8px;
+    font-size: 14px;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    color: rgba(0, 0, 0, 0.4);
+    text-decoration: none;
+    pointer-events: auto;
+}
+
+.bottomNavItemActive {
+    color: #000000;
+}
+
+.navIndicator {
+    position: absolute;
+    inset: 0;
+    background-color: #ffe100;
+    z-index: -1;
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+    .shell {
+        height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .logoContainer {
+        top: 20px;
+    }
+
+    .bottomNav {
+        bottom: 20px;
+    }
+}

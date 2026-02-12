@@ -1,10 +1,8 @@
 'use client';
 
 import { useRef, useState, useCallback } from 'react';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import styles from '@/styles/About.module.css';
-import Spring from '@/components/Spring';
 import NameCard from '@/components/NameCard';
 import Poster from '@/components/Poster';
 import BluePoster from '@/components/BluePoster';
@@ -66,13 +64,6 @@ export default function About() {
 
     return (
         <main ref={canvasRef} className={styles.canvas}>
-            {/* Top logo / spring */}
-            <header className={styles.logoContainer}>
-                <div className={styles.logoSpring}>
-                    <Spring />
-                </div>
-            </header>
-
             <div ref={innerRef} className={styles.canvasInner}>
             <motion.div {...itemProps('poster')}>
                 <div className={styles.canvasItemInner}><Poster /></div>
@@ -115,18 +106,6 @@ export default function About() {
             </motion.div>
             </div>
 
-            {/* Bottom navigation */}
-            <footer className={styles.bottomNav} aria-label="Site navigation">
-                <Link href="/" className={styles.bottomNavItem}>
-                    Work
-                </Link>
-                <Link href="/about" className={`${styles.bottomNavItem} ${styles.bottomNavItemActive}`}>
-                    About
-                </Link>
-                <button type="button" className={styles.bottomNavItem}>
-                    Collaborate
-                </button>
-            </footer>
         </main>
     );
 }
