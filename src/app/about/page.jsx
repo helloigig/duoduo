@@ -73,11 +73,11 @@ export default function About() {
                 <div className={styles.canvasItemInner}>
                 <NameCard
                     pronoun="her"
-                    name="0"
+                    name="K"
                     employeeCode="000"
-                    avatarSrc=""
-                    facts="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."
-                    assignment="Placeholder assignment text goes here. Placeholder assignment text goes here. Placeholder assignment text goes here."
+                    avatarSrc="/kw.png"
+                    facts="Kiwi designs interfaces for things that exist in both physical and digital worlds. Kiwi believes good interaction should survive engineering, manufacturing, and bad network conditions. Kiwi can prototype ideas before meetings end. Kiwi writes code when necessary. Kiwi is calm under complex constraints."
+                    assignment="Turning complex systems into experiences that feel inevitable."
                 />
                 </div>
             </motion.div>
@@ -92,7 +92,7 @@ export default function About() {
                 <div className={styles.canvasItemInner}>
                 <NameCard
                     pronoun="her"
-                    name="W"
+                    name="G"
                     employeeCode="001"
                     avatarSrc="/gg.png"
                     facts="Gigi designs experiences for products that think. Gigi turns complex AI systems into stories humans can understand. Gigi believes brand is not decoration, but a decision-making tool. Gigi leads with narrative, then builds systems to support it. Gigi sees the product as a whole before others see features."

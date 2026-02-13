@@ -8,4 +8,3 @@ Portfolio site for duoduo. Built with Next.js and Framer Motion.
 - [React](https://react.dev) 19
 - [Framer Motion](https://motion.dev) 12
 - CSS Modules
-  
