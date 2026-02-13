@@ -35,7 +35,7 @@
     cursor: grabbing;
 }
 
-.canvasItem img {
+.canvasItemInner > img {
     width: 230px;
     display: block;
     pointer-events: none;

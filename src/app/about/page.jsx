@@ -73,11 +73,11 @@ export default function About() {
                 <div className={styles.canvasItemInner}>
                 <NameCard
                     pronoun="her"
-                    name="K"
+                    name="0"
                     employeeCode="000"
-                    avatarSrc="/kw.png"
-                    facts="Kiwi designs interfaces for things that exist in both physical and digital worlds. Kiwi believes good interaction should survive engineering, manufacturing, and bad network conditions. Kiwi can prototype ideas before meetings end. Kiwi writes code when necessary. Kiwi is calm under complex constraints."
-                    assignment="Turning complex systems into experiences that feel inevitable."
+                    avatarSrc=""
+                    facts="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris."
+                    assignment="Placeholder assignment text goes here. Placeholder assignment text goes here. Placeholder assignment text goes here."
                 />
                 </div>
             </motion.div>
