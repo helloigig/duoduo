@@ -229,6 +229,12 @@ export default function Home() {
                                 key={`mobile-${i}`}
                                 className={`${styles.mobileProjectItem} ${isActive ? styles.projectItemActive : styles.projectItem}`}
                                 style={{ height: MOBILE_ITEM_HEIGHT, minHeight: MOBILE_ITEM_HEIGHT }}
+                                onClick={() => {
+                                    const el = scrollContainerRef.current;
+                                    if (!el) return;
+                                    const targetTop = i * MOBILE_ITEM_HEIGHT + MOBILE_ITEM_HEIGHT / 2 - el.clientHeight / 2;
+                                    el.scrollTo({ top: targetTop, behavior: 'smooth' });
+                                }}
                             >
                                 <div className={styles.projectNameRow}>
                                     <span className={styles.projectName}>{project.name}</span>
