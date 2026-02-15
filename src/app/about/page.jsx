@@ -8,7 +8,7 @@ import Poster from '@/components/Poster';
 import BluePoster from '@/components/BluePoster';
 
 function randomRotation() {
-    return Math.random() * 20 - 10;
+    return Math.random() * 10 - 5;
 }
 
 const ITEMS = [
@@ -19,7 +19,7 @@ const ITEMS = [
     { id: 'card2', x: '66%', y: '44%', rotation: -3, w: 320 }
 ];
 
-const cardTransition = { type: 'spring', stiffness: 300, damping: 30 };
+const cardTransition = { duration: 0.4, ease: 'easeIn'};
 
 function renderCardContent(id) {
     switch (id) {
@@ -75,11 +75,12 @@ export default function About() {
     // Mobile card stack state
     const [currentIndex, setCurrentIndex] = useState(0);
     const [vw, setVw] = useState(375);
-    const [mobileRotations] = useState(() =>
-        ITEMS.map(() => randomRotation())
+    const [mobileRotations, setMobileRotations] = useState(() =>
+        ITEMS.map(() => 0)
     );
 
     useEffect(() => {
+        setMobileRotations(ITEMS.map(() => randomRotation()));
         const update = () => setVw(window.innerWidth);
         update();
         window.addEventListener('resize', update);
@@ -102,7 +103,15 @@ export default function About() {
     const handleSwipe = useCallback((_e, info) => {
         const swiped = Math.abs(info.offset.x) > 50 || Math.abs(info.velocity.x) > 300;
         if (swiped) {
-            setCurrentIndex((prev) => (prev + 1) % ITEMS.length);
+            setCurrentIndex((prev) => {
+                const swipedIndex = prev;
+                setMobileRotations((rots) => {
+                    const next = [...rots];
+                    next[swipedIndex] = randomRotation();
+                    return next;
+                });
+                return (prev + 1) % ITEMS.length;
+            });
         }
     }, []);
 
@@ -185,7 +194,7 @@ export default function About() {
                                 onDragEnd={isTop ? handleSwipe : undefined}
                                 style={{ pointerEvents: isTop ? 'auto' : 'none', touchAction: isTop ? 'pan-y' : 'none' }}
                             >
-                                <div style={{ zoom: (vw * 0.75) / item.w, transform: `rotate(${mobileRotations[i]}deg)` }}>
+                                <div style={{ zoom: (vw * 0.66) / item.w, transform: `rotate(${mobileRotations[i]}deg)` }}>
                                     {renderCardContent(item.id)}
                                 </div>
                             </motion.div>
