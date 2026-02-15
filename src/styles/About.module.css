@@ -25,10 +25,17 @@
 }
 
 .canvasItemInner {
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1);
     cursor: grab;
     user-select: none;
     pointer-events: auto;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: none;
+}
+
+.canvasItemInner:hover {
+    transform: translate(-50%, -50%) scale(1.03);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .canvasItemInner:active {
@@ -40,5 +47,69 @@
     display: block;
     pointer-events: none;
     -webkit-user-drag: none;
+}
+
+/* ── Mobile card stack ── */
+
+.mobileStack {
+    display: none;
+    overflow: hidden;
+}
+
+.mobileStackContainer {
+    display: grid;
+    width: 92vw;
+    justify-items: center;
+    align-items: center;
+}
+
+.mobileStackContainer > * {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.mobileTopCard {
+    z-index: 3;
+    touch-action: pan-y;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobileStackCard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.mobileStackBehind1 {
+    z-index: 2;
+}
+
+.mobileStackBehind2 {
+    z-index: 1;
+}
+
+/* ── Mobile breakpoint ── */
+
+@media (max-width: 768px) {
+    .canvas {
+        display: flex;
+    }
+
+    .canvasInner {
+        display: none;
+    }
+
+    .mobileStack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        padding: 24px 0;
+    }
 }
 
