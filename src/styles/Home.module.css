@@ -95,9 +95,14 @@
     background-color: #e4e4e4;
     width: 100%;
     aspect-ratio: 4 / 3;
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: center;
+    justify-items: center;
+}
+
+.preview > * {
+    grid-column: 1;
+    grid-row: 1;
 }
 
 .previewInner {
@@ -116,6 +121,16 @@
     display: block;
     pointer-events: none;
     user-select: none;
+}
+
+.previewVisible {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.previewHidden {
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
 
 .previewLabel {
@@ -205,10 +220,15 @@
     background-color: #e4e4e4;
     width: 100%;
     aspect-ratio: 4 / 3;
-    display: flex;
+    display: grid;
     align-items: center;
-    justify-content: center;
+    justify-items: center;
     margin-top: 24px;
+}
+
+.mobilePreview > * {
+    grid-column: 1;
+    grid-row: 1;
 }
 
 /* Responsive: Mobile */

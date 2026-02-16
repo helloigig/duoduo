@@ -2,9 +2,33 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import styles from '@/styles/Shell.module.css';
 import Spring from '@/components/Spring';
+
+function useClocks() {
+    const [times, setTimes] = useState({ london: '', shenzhen: '' });
+
+    useEffect(() => {
+        const fmt = (tz) => new Intl.DateTimeFormat('en-GB', {
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: false, timeZone: tz,
+        });
+        const londonFmt = fmt('Europe/London');
+        const shenzhenFmt = fmt('Asia/Shanghai');
+
+        const update = () => setTimes({
+            london: londonFmt.format(new Date()),
+            shenzhen: shenzhenFmt.format(new Date()),
+        });
+        update();
+        const id = setInterval(update, 1000);
+        return () => clearInterval(id);
+    }, []);
+
+    return times;
+}
 
 const NAV_ITEMS = [
     { label: 'Work', href: '/' },
@@ -14,13 +38,16 @@ const NAV_ITEMS = [
 
 export default function PageShell({ children }) {
     const pathname = usePathname();
+    const { london, shenzhen } = useClocks();
 
     return (
         <div className={styles.shell}>
             <header className={styles.logoContainer}>
+                <span className={styles.clockLeft}>LDN {london}</span>
                 <div className={styles.logoSpring}>
                     <Spring />
                 </div>
+                <span className={styles.clockRight}>SHENZHEN {shenzhen}</span>
             </header>
 
             <div className={styles.content}>

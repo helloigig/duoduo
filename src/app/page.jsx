@@ -200,16 +200,24 @@ export default function Home() {
                     style={{ cursor: 'pointer' }}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
                 >
-                    {(() => {
-                        const project = activeSide === 'left' ? LEFT_PROJECTS[activeIndex] : RIGHT_PROJECTS[activeIndex];
-                        return project.preview ? (
-                            <img className={styles.previewImage} src={project.preview} alt={project.name} draggable={false} />
+                    {ALL_PROJECTS.map((project, i) => (
+                        project.preview ? (
+                            <img
+                                key={project.name}
+                                className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                                src={project.preview}
+                                alt={project.name}
+                                draggable={false}
+                            />
                         ) : (
-                            <div className={styles.previewInner}>
+                            <div
+                                key={project.name}
+                                className={`${styles.previewInner} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                            >
                                 <span className={styles.previewLabel}>{project.name}</span>
                             </div>
-                        );
-                    })()}
+                        )
+                    ))}
                 </motion.div>
 
                 <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation right">
@@ -255,13 +263,24 @@ export default function Home() {
                     })}
                 </div>
                 <div className={styles.mobilePreview}>
-                    {ALL_PROJECTS[activeStep].preview ? (
-                        <img className={styles.previewImage} src={ALL_PROJECTS[activeStep].preview} alt={ALL_PROJECTS[activeStep].name} draggable={false} />
-                    ) : (
-                        <div className={styles.previewInner}>
-                            <span className={styles.previewLabel}>{ALL_PROJECTS[activeStep].name}</span>
-                        </div>
-                    )}
+                    {ALL_PROJECTS.map((project, i) => (
+                        project.preview ? (
+                            <img
+                                key={project.name}
+                                className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                                src={project.preview}
+                                alt={project.name}
+                                draggable={false}
+                            />
+                        ) : (
+                            <div
+                                key={project.name}
+                                className={`${styles.previewInner} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                            >
+                                <span className={styles.previewLabel}>{project.name}</span>
+                            </div>
+                        )
+                    ))}
                 </div>
             </section>
 

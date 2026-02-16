@@ -24,12 +24,33 @@
     right: 0;
     display: flex;
     justify-content: center;
+    align-items: center;
     z-index: 10;
     pointer-events: none;
+    padding: 0 40px;
 }
 
 .logoSpring {
     pointer-events: auto;
+}
+
+.clockLeft,
+.clockRight {
+    position: absolute;
+    top: 0%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: rgba(0, 0, 0, 0.8);
+    font-variant-numeric: tabular-nums;
+}
+
+.clockLeft {
+    left: 40px;
+}
+
+.clockRight {
+    right: 40px;
 }
 
 /* Bottom navigation — fixed overlay */
@@ -80,6 +101,21 @@
 
     .logoContainer {
         top: 20px;
+        padding: 0 16px;
+    }
+
+    .clockLeft,
+    .clockRight {
+        top: 50%;
+        font-size: 12px;
+    }
+
+    .clockLeft {
+        left: 16px;
+    }
+
+    .clockRight {
+        right: 16px;
     }
 
     .bottomNav {
