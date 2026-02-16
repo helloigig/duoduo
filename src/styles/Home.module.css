@@ -109,6 +109,15 @@
     justify-content: center;
 }
 
+.previewImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
 .previewLabel {
     font-size: 14px;
     letter-spacing: 0.08em;

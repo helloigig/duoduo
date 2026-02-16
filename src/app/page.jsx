@@ -35,19 +35,22 @@ function ProjectItem({ project, isActive, onHover }) {
 
 const LEFT_PROJECTS = [
     {
-        name: 'Helios Analytics',
-        tag: 'B2B SaaS',
-        subtitle: 'Product Strategy',
+        name: 'AnyApp',
+        tag: 'Mobile App',
+        subtitle: 'AI Widgets · UI/UX',
+        preview: '/AnyApp.png',
     },
     {
-        name: 'Nebula',
-        tag: 'Productivity',
-        subtitle: 'Interface Systems',
+        name: 'Cuto',
+        tag: 'Mobile App',
+        subtitle: 'Wallpaper · Redesign',
+        preview: '/cuto.png',
     },
     {
-        name: 'Aether Labs',
-        tag: 'R&D',
-        subtitle: 'Visual Language',
+        name: 'Bloc1',
+        tag: 'Mobile App',
+        subtitle: 'Gym · Service Design',
+        preview: '/Bloc1.png',
     },
 ];
 
@@ -56,6 +59,7 @@ const RIGHT_PROJECTS = [
         name: 'Quant Systems',
         tag: 'Fintech',
         subtitle: 'Design Systems',
+        preview: '/aiplatform.png',
     },
     {
         name: 'Signal Studio',
@@ -196,11 +200,16 @@ export default function Home() {
                     style={{ cursor: 'pointer' }}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
                 >
-                    <div className={styles.previewInner}>
-                        <span className={styles.previewLabel}>
-                            {activeSide === 'left' ? LEFT_PROJECTS[activeIndex].name : RIGHT_PROJECTS[activeIndex].name}
-                        </span>
-                    </div>
+                    {(() => {
+                        const project = activeSide === 'left' ? LEFT_PROJECTS[activeIndex] : RIGHT_PROJECTS[activeIndex];
+                        return project.preview ? (
+                            <img className={styles.previewImage} src={project.preview} alt={project.name} draggable={false} />
+                        ) : (
+                            <div className={styles.previewInner}>
+                                <span className={styles.previewLabel}>{project.name}</span>
+                            </div>
+                        );
+                    })()}
                 </motion.div>
 
                 <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation right">
@@ -246,11 +255,13 @@ export default function Home() {
                     })}
                 </div>
                 <div className={styles.mobilePreview}>
-                    <div className={styles.previewInner}>
-                        <span className={styles.previewLabel}>
-                            {ALL_PROJECTS[activeStep].name}
-                        </span>
-                    </div>
+                    {ALL_PROJECTS[activeStep].preview ? (
+                        <img className={styles.previewImage} src={ALL_PROJECTS[activeStep].preview} alt={ALL_PROJECTS[activeStep].name} draggable={false} />
+                    ) : (
+                        <div className={styles.previewInner}>
+                            <span className={styles.previewLabel}>{ALL_PROJECTS[activeStep].name}</span>
+                        </div>
+                    )}
                 </div>
             </section>
 
