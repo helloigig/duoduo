@@ -4,13 +4,44 @@
     gap: 2px;
 }
 
+.duoWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 .duoLogo {
     height: 36px;
     width: auto;
+    cursor: pointer;
+}
+
+.timeLabel {
+    position: absolute;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: rgba(0, 0, 0, 0.8);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.timeLabelLeft {
+    left: -10px;
+    transform: translateX(-100%);
+}
+
+.timeLabelRight {
+    right: -10px;
+    transform: translateX(100%);
 }
 
 @media (max-width: 768px) {
     .duoLogo {
         height: 28px;
+    }
+
+    .timeLabel {
+        font-size: 12px;
     }
 }

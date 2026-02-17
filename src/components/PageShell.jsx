@@ -44,7 +44,7 @@ export default function PageShell({ children }) {
         <div className={styles.shell}>
             <header className={styles.logoContainer}>
                 <div className={styles.logoSpring}>
-                    <Spring />
+                    <Spring london={london} shenzhen={shenzhen} />
                 </div>
                 <nav className={styles.topNav} aria-label="Site navigation">
                     {NAV_ITEMS.map((item) => {

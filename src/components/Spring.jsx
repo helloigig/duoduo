@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, useAnimationControls } from 'framer-motion';
+import { motion, useAnimationControls, AnimatePresence } from 'framer-motion';
 import styles from '@/styles/Spring.module.css';
 
-function DuoLogo({ delay = 0 }) {
+function DuoLogo({ delay = 0, label, time, position }) {
   const controls = useAnimationControls();
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleHover = async () => {
     if (isAnimating) return;
@@ -19,21 +20,42 @@ function DuoLogo({ delay = 0 }) {
   };
 
   return (
-    <motion.img
-      src="/duo.svg"
-      alt="Duo"
-      className={styles.duoLogo}
-      animate={controls}
-      onMouseEnter={handleHover}
-    />
+    <div
+      className={styles.duoWrapper}
+      onMouseEnter={() => {
+        handleHover();
+        setIsHovered(true);
+      }}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <motion.img
+        src="/duo.svg"
+        alt="Duo"
+        className={styles.duoLogo}
+        animate={controls}
+      />
+      <AnimatePresence>
+        {isHovered && (
+          <motion.span
+            className={`${styles.timeLabel} ${position === 'left' ? styles.timeLabelLeft : styles.timeLabelRight}`}
+            initial={{ opacity: 0, x: position === 'left' ? 10 : -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: position === 'left' ? 10 : -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {label} {time}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
-export default function Spring() {
+export default function Spring({ london, shenzhen }) {
   return (
     <div className={styles.logoContainer}>
-      <DuoLogo />
-      <DuoLogo delay={0.05} />
+      <DuoLogo label="LDN" time={london} position="left" />
+      <DuoLogo label="SHENZHEN" time={shenzhen} position="right" delay={0.05} />
     </div>
   );
 }
