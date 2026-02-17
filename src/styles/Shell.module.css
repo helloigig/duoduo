@@ -46,11 +46,11 @@
 }
 
 .clockLeft {
-    left: 40px;
+    left: max(40px, calc((100vw - 1400px) / 2));
 }
 
 .clockRight {
-    right: 40px;
+    right: max(40px, calc((100vw - 1400px) / 2));
 }
 
 /* Bottom navigation — fixed overlay */
