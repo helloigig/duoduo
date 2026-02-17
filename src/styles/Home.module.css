@@ -29,14 +29,6 @@
     transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.navColumn:last-of-type .projectItem {
-    text-align: right;
-}
-
-.navColumn:last-of-type .projectNameRow {
-    justify-content: flex-end;
-}
-
 .navColumnHidden {
     opacity: 0;
     visibility: hidden;
@@ -72,8 +64,8 @@
 
 .projectTag {
     font-size: 12px;
-    padding: 2px 6px;
-    background-color: rgba(0, 0, 0, 0.08);
+    letter-spacing: -0.02em;
+    color: rgba(0, 0, 0, 0.5);
 }
 
 .projectSubtitle {

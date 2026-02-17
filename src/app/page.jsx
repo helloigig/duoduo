@@ -19,15 +19,12 @@ function ProjectItem({ project, isActive, onHover }) {
             className={`${styles.projectItem} ${isActive ? styles.projectItemActive : ''}`}
             onMouseEnter={handleMouseEnter}
         >
-            <div className={styles.projectNameRow}>
-                <span className={styles.projectName}>{project.name}</span>
-                <span className={styles.projectTag}>{project.tag}</span>
-            </div>
+            <span className={styles.projectName}>{project.name}</span>
             <span
                 className={`${styles.projectSubtitle} ${bouncing ? styles.projectSubtitleBounce : ''}`}
                 onAnimationEnd={() => setBouncing(false)}
             >
-                {project.subtitle}
+                <span className={styles.projectTag}>{project.tag}</span> · {project.subtitle}
             </span>
         </button>
     );
@@ -308,11 +305,10 @@ export default function Home() {
                                     el.scrollTo({ top: targetTop, behavior: 'smooth' });
                                 }}
                             >
-                                <div className={styles.projectNameRow}>
-                                    <span className={styles.projectName}>{project.name}</span>
-                                    <span className={styles.projectTag}>{project.tag}</span>
-                                </div>
-                                <span className={styles.projectSubtitle}>{project.subtitle}</span>
+                                <span className={styles.projectName}>{project.name}</span>
+                                <span className={styles.projectSubtitle}>
+                                    <span className={styles.projectTag}>{project.tag}</span> · {project.subtitle}
+                                </span>
                             </div>
                         );
                     })}
