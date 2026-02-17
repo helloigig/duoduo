@@ -18,6 +18,8 @@
 
 .timeLabel {
     position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 13px;
     letter-spacing: 0.02em;
     color: rgba(0, 0, 0, 0.8);
@@ -27,13 +29,13 @@
 }
 
 .timeLabelLeft {
-    left: -10px;
-    transform: translateX(-100%);
+    right: calc(100% + 12px);
+    text-align: right;
 }
 
 .timeLabelRight {
-    right: -10px;
-    transform: translateX(100%);
+    left: calc(100% + 12px);
+    text-align: left;
 }
 
 @media (max-width: 768px) {

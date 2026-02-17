@@ -38,10 +38,10 @@ function DuoLogo({ delay = 0, label, time, position }) {
         {isHovered && (
           <motion.span
             className={`${styles.timeLabel} ${position === 'left' ? styles.timeLabelLeft : styles.timeLabelRight}`}
-            initial={{ opacity: 0, x: position === 'left' ? 10 : -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: position === 'left' ? 10 : -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
             {label} {time}
           </motion.span>
