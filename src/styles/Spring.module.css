@@ -1,10 +1,16 @@
-.logo {
+.logoContainer {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.duoLogo {
     height: 36px;
     width: auto;
 }
 
 @media (max-width: 768px) {
-    .logo {
+    .duoLogo {
         height: 28px;
     }
 }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, useAnimationControls } from 'framer-motion';
 import styles from '@/styles/Spring.module.css';
 
-export default function Spring() {
+function DuoLogo({ delay = 0 }) {
   const controls = useAnimationControls();
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -13,18 +13,27 @@ export default function Spring() {
     setIsAnimating(true);
     await controls.start({
       scaleY: [1, 0.3, 0.3, 1.25, 1],
-      transition: { duration: 1, times: [0, 0.15, 0.5, 0.65, 1], ease: 'easeInOut' },
+      transition: { duration: 1, times: [0, 0.15, 0.5, 0.65, 1], ease: 'easeInOut', delay },
     });
     setIsAnimating(false);
   };
 
   return (
     <motion.img
-      src="/duoduo.svg"
-      alt="DuoDuo"
-      className={styles.logo}
+      src="/duo.svg"
+      alt="Duo"
+      className={styles.duoLogo}
       animate={controls}
       onMouseEnter={handleHover}
     />
+  );
+}
+
+export default function Spring() {
+  return (
+    <div className={styles.logoContainer}>
+      <DuoLogo />
+      <DuoLogo delay={0.05} />
+    </div>
   );
 }
