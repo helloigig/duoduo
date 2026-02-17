@@ -65,7 +65,8 @@
 .projectTag {
     font-size: 12px;
     letter-spacing: -0.02em;
-    color: rgba(0, 0, 0, 0.5);
+    color: rgba(0, 0, 0, 0.7);
+    font-weight: 500;
 }
 
 .projectSubtitle {
@@ -74,16 +75,6 @@
     color: rgba(0, 0, 0, 0.5);
     display: block;
     margin-top: 4px;
-}
-
-.projectSubtitleBounce {
-    animation: subtitleBounce 0.8s ease-in-out;
-}
-
-@keyframes subtitleBounce {
-    0%, 100% { transform: translateY(0); }
-    15%, 50% { transform: translateY(-4px); }
-    65% { transform: translateY(6px); }
 }
 
 /* Center preview placeholder */
@@ -139,15 +130,15 @@
 /* Expanded preview */
 .previewExpanded {
     position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: auto;
+    top: 100px;
+    bottom: 100px;
+    left: 100px;
+    right: 100px;
     z-index: 100;
-    height: calc(100vh - 40px);
-    width: fit-content;
+    width: auto;
+    height: auto;
     aspect-ratio: 4 / 3;
+    margin: auto;
 }
 
 /* Mobile layout — hidden on desktop */

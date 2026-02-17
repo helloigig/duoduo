@@ -5,26 +5,15 @@ import { motion } from 'framer-motion';
 import styles from '@/styles/Home.module.css';
 
 function ProjectItem({ project, isActive, onHover }) {
-    const [bouncing, setBouncing] = useState(false);
-
-    const handleMouseEnter = () => {
-        onHover();
-        if (bouncing) return;
-        setBouncing(true);
-    };
-
     return (
         <button
             type="button"
             className={`${styles.projectItem} ${isActive ? styles.projectItemActive : ''}`}
-            onMouseEnter={handleMouseEnter}
+            onMouseEnter={onHover}
         >
             <span className={styles.projectName}>{project.name}</span>
-            <span
-                className={`${styles.projectSubtitle} ${bouncing ? styles.projectSubtitleBounce : ''}`}
-                onAnimationEnd={() => setBouncing(false)}
-            >
-                <span className={styles.projectTag}>{project.tag}</span> · {project.subtitle}
+            <span className={styles.projectSubtitle}>
+                <span className={styles.projectTag}>{project.tag}</span> for {project.subtitle}
             </span>
         </button>
     );
@@ -307,7 +296,7 @@ export default function Home() {
                             >
                                 <span className={styles.projectName}>{project.name}</span>
                                 <span className={styles.projectSubtitle}>
-                                    <span className={styles.projectTag}>{project.tag}</span> · {project.subtitle}
+                                    <span className={styles.projectTag}>{project.tag}</span> for {project.subtitle}
                                 </span>
                             </div>
                         );
