@@ -59,14 +59,14 @@ const RIGHT_PROJECTS = [
         name: 'Dify Website',
         tag: 'Website',
         subtitle: 'AI Platform',
-        preview: '/Dify.mov',
+        preview: '/Dify.mp4',
         isVideo: true,
     },
     {
         name: 'Basecamp Research Website',
         tag: 'Website',
         subtitle: 'Brand · Research',
-        preview: '/BCR.mov',
+        preview: '/BCR.mp4',
         isVideo: true,
     },
     {
@@ -97,6 +97,9 @@ export default function Home() {
     const activeIndex = activeSide === 'left' ? activeStep : activeStep - LEFT_PROJECTS.length;
 
     const previewRef = useRef(null);
+    const mobilePreviewRef = useRef(null);
+    const activeStepRef = useRef(activeStep);
+    activeStepRef.current = activeStep;
 
     const pause = useCallback(() => { pausedRef.current = true; }, []);
     const resume = useCallback(() => { pausedRef.current = false; }, []);
@@ -111,6 +114,36 @@ export default function Home() {
         window.addEventListener('mousedown', handleClickOutside, true);
         return () => window.removeEventListener('mousedown', handleClickOutside, true);
     }, [expanded]);
+
+    // Play active video on hover, pause others
+    useEffect(() => {
+        const playActive = () => {
+            const container = previewRef.current;
+            if (!container) return;
+            container.querySelectorAll('video[data-project-index]').forEach((video) => {
+                const idx = parseInt(video.dataset.projectIndex, 10);
+                if (idx === activeStep) {
+                    if (video.src) video.play().catch(() => {});
+                } else {
+                    video.pause();
+                }
+            });
+            if (mobilePreviewRef.current) {
+                mobilePreviewRef.current.querySelectorAll('video[data-project-index]').forEach((video) => {
+                    const idx = parseInt(video.dataset.projectIndex, 10);
+                    if (idx === activeStep) {
+                        if (video.src) video.play().catch(() => {});
+                    } else {
+                        video.pause();
+                    }
+                });
+            }
+        };
+        playActive();
+        // Retry after React has updated the DOM (video may get src in same tick)
+        const id = setTimeout(playActive, 100);
+        return () => clearTimeout(id);
+    }, [activeStep]);
 
     // Initialize scroll position to center of looped list
     const midStart = Math.floor(LOOP_COUNT / 2) * total;
@@ -209,13 +242,18 @@ export default function Home() {
                             project.isVideo ? (
                                 <video
                                     key={project.name}
+                                    data-project-index={i}
                                     className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
-                                    src={project.preview}
-                                    autoPlay
+                                    src={i === activeStep ? project.preview : undefined}
+                                    preload={i === activeStep ? 'auto' : 'none'}
                                     loop
                                     muted
                                     playsInline
                                     draggable={false}
+                                    onCanPlay={(e) => {
+                                        if (activeStepRef.current === i) e.target.play().catch(() => {});
+                                    }}
+                                    onError={(e) => console.warn('Video failed to load:', project.name, e.target.error)}
                                 />
                             ) : (
                                 <img
@@ -279,19 +317,24 @@ export default function Home() {
                         );
                     })}
                 </div>
-                <div className={styles.mobilePreview}>
+                <div ref={mobilePreviewRef} className={styles.mobilePreview}>
                     {ALL_PROJECTS.map((project, i) => (
                         project.preview ? (
                             project.isVideo ? (
                                 <video
                                     key={project.name}
+                                    data-project-index={i}
                                     className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
-                                    src={project.preview}
-                                    autoPlay
+                                    src={i === activeStep ? project.preview : undefined}
+                                    preload={i === activeStep ? 'auto' : 'none'}
                                     loop
                                     muted
                                     playsInline
                                     draggable={false}
+                                    onCanPlay={(e) => {
+                                        if (activeStepRef.current === i) e.target.play().catch(() => {});
+                                    }}
+                                    onError={(e) => console.warn('Video failed to load:', project.name, e.target.error)}
                                 />
                             ) : (
                                 <img
