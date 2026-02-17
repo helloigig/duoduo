@@ -43,43 +43,45 @@ export default function PageShell({ children }) {
     return (
         <div className={styles.shell}>
             <header className={styles.logoContainer}>
-                <span className={styles.clockLeft}>LDN {london}</span>
                 <div className={styles.logoSpring}>
                     <Spring />
                 </div>
-                <span className={styles.clockRight}>SHENZHEN {shenzhen}</span>
+                <nav className={styles.topNav} aria-label="Site navigation">
+                    {NAV_ITEMS.map((item) => {
+                        const isActive = item.href === pathname;
+                        const className = `${styles.topNavItem} ${isActive ? styles.topNavItemActive : ''}`;
+
+                        if (item.href) {
+                            return (
+                                <Link key={item.label} href={item.href} className={className}>
+                                    {isActive && (
+                                        <motion.span
+                                            className={styles.navIndicator}
+                                            layoutId="nav-indicator"
+                                            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                                        />
+                                    )}
+                                    {item.label}
+                                </Link>
+                            );
+                        }
+
+                        return (
+                            <button key={item.label} type="button" className={className}>
+                                {item.label}
+                            </button>
+                        );
+                    })}
+                </nav>
             </header>
 
             <div className={styles.content}>
                 {children}
             </div>
 
-            <footer className={styles.bottomNav} aria-label="Site navigation">
-                {NAV_ITEMS.map((item) => {
-                    const isActive = item.href === pathname;
-                    const className = `${styles.bottomNavItem} ${isActive ? styles.bottomNavItemActive : ''}`;
-
-                    if (item.href) {
-                        return (
-                            <Link key={item.label} href={item.href} className={className}>
-                                {isActive && (
-                                    <motion.span
-                                        className={styles.navIndicator}
-                                        layoutId="nav-indicator"
-                                        transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                                    />
-                                )}
-                                {item.label}
-                            </Link>
-                        );
-                    }
-
-                    return (
-                        <button key={item.label} type="button" className={className}>
-                            {item.label}
-                        </button>
-                    );
-                })}
+            <footer className={styles.bottomInfo}>
+                <span className={styles.clockLeft}>LDN {london}</span>
+                <span className={styles.clockRight}>SHENZHEN {shenzhen}</span>
             </footer>
         </div>
     );

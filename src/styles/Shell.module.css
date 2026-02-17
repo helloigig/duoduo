@@ -23,7 +23,7 @@
     left: 0;
     right: 0;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     z-index: 10;
     pointer-events: none;
@@ -32,42 +32,19 @@
 
 .logoSpring {
     pointer-events: auto;
-}
-
-.clockLeft,
-.clockRight {
     position: absolute;
-    top: 0%;
-    transform: translateY(-50%);
-    font-size: 13px;
-    letter-spacing: 0.02em;
-    color: rgba(0, 0, 0, 0.8);
-    font-variant-numeric: tabular-nums;
-    display: none;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
-.clockLeft {
-    left: max(40px, calc((100vw - 1400px) / 2));
-}
-
-.clockRight {
-    right: max(40px, calc((100vw - 1400px) / 2));
-}
-
-/* Bottom navigation — fixed overlay */
-.bottomNav {
-    position: fixed;
-    bottom: 48px;
-    left: 0;
-    right: 0;
+.topNav {
     display: flex;
-    justify-content: center;
     gap: 16px;
-    z-index: 10;
-    pointer-events: none;
+    pointer-events: auto;
+    margin-left: auto;
 }
 
-.bottomNavItem {
+.topNavItem {
     position: relative;
     background: transparent;
     border: none;
@@ -81,8 +58,29 @@
     pointer-events: auto;
 }
 
-.bottomNavItemActive {
+.topNavItemActive {
     color: #000000;
+}
+
+/* Bottom info — fixed overlay */
+.bottomInfo {
+    position: fixed;
+    bottom: 48px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    z-index: 10;
+    pointer-events: none;
+    padding: 0 40px;
+}
+
+.clockLeft,
+.clockRight {
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: rgba(0, 0, 0, 0.8);
+    font-variant-numeric: tabular-nums;
 }
 
 .navIndicator {
@@ -105,21 +103,23 @@
         padding: 0 16px;
     }
 
+    .topNav {
+        font-size: 12px;
+        gap: 12px;
+    }
+
+    .topNavItem {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+
+    .bottomInfo {
+        bottom: 20px;
+        padding: 0 16px;
+    }
+
     .clockLeft,
     .clockRight {
-        top: 50%;
         font-size: 12px;
-    }
-
-    .clockLeft {
-        left: 16px;
-    }
-
-    .clockRight {
-        right: 16px;
-    }
-
-    .bottomNav {
-        bottom: 20px;
     }
 }
