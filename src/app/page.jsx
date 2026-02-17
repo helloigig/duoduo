@@ -56,20 +56,24 @@ const LEFT_PROJECTS = [
 
 const RIGHT_PROJECTS = [
     {
-        name: 'Quant Systems',
-        tag: 'Fintech',
-        subtitle: 'Design Systems',
-        preview: '/aiplatform.png',
+        name: 'Dify Website',
+        tag: 'Website',
+        subtitle: 'AI Platform',
+        preview: '/Dify.mov',
+        isVideo: true,
     },
     {
-        name: 'Signal Studio',
-        tag: 'Brand',
-        subtitle: 'Identity',
+        name: 'Basecamp Research Website',
+        tag: 'Website',
+        subtitle: 'Brand · Research',
+        preview: '/BCR.mov',
+        isVideo: true,
     },
     {
-        name: 'Northwind',
+        name: 'AI Platform',
         tag: 'Platform',
         subtitle: 'Experience',
+        preview: '/aiplatform.png',
     },
 ];
 
@@ -202,13 +206,26 @@ export default function Home() {
                 >
                     {ALL_PROJECTS.map((project, i) => (
                         project.preview ? (
-                            <img
-                                key={project.name}
-                                className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
-                                src={project.preview}
-                                alt={project.name}
-                                draggable={false}
-                            />
+                            project.isVideo ? (
+                                <video
+                                    key={project.name}
+                                    className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                                    src={project.preview}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    draggable={false}
+                                />
+                            ) : (
+                                <img
+                                    key={project.name}
+                                    className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                                    src={project.preview}
+                                    alt={project.name}
+                                    draggable={false}
+                                />
+                            )
                         ) : (
                             <div
                                 key={project.name}
@@ -265,13 +282,26 @@ export default function Home() {
                 <div className={styles.mobilePreview}>
                     {ALL_PROJECTS.map((project, i) => (
                         project.preview ? (
-                            <img
-                                key={project.name}
-                                className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
-                                src={project.preview}
-                                alt={project.name}
-                                draggable={false}
-                            />
+                            project.isVideo ? (
+                                <video
+                                    key={project.name}
+                                    className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                                    src={project.preview}
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    draggable={false}
+                                />
+                            ) : (
+                                <img
+                                    key={project.name}
+                                    className={`${styles.previewImage} ${i === activeStep ? styles.previewVisible : styles.previewHidden}`}
+                                    src={project.preview}
+                                    alt={project.name}
+                                    draggable={false}
+                                />
+                            )
                         ) : (
                             <div
                                 key={project.name}
