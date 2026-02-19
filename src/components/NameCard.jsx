@@ -37,9 +37,11 @@ export default function NameCard({
     return (
         <div className={styles.card}>
             <div className={styles.innerStroke}>
-                <div className={styles.avatar}>
-                    {avatarSrc && <img src={avatarSrc} alt={name} draggable={false} />}
-                </div>
+                {avatarSrc && (
+                    <div className={styles.avatar}>
+                        <img src={avatarSrc} alt={name} draggable={false} />
+                    </div>
+                )}
 
                 {!hideName && (
                     <div className={styles.nameSection}>

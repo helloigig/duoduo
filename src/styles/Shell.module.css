@@ -122,8 +122,8 @@
 }
 
 .calModal {
-    width: min(700px, 100%);
-    height: min(720px, 90vh);
+    width: min(960px, 100%);
+    height: min(520px, 90vh);
     overflow: hidden;
     background: #fff;
 }

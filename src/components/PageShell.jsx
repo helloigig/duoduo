@@ -135,14 +135,13 @@ export default function PageShell({ children }) {
                             <NameCard
                                 pronoun="her"
                                 name="G"
-                                avatarSrc="/gg.png"
                                 facts="Gigi designs experiences for products that think. Gigi turns complex AI systems into stories humans can understand. Gigi believes brand is not decoration, but a decision-making tool. Gigi leads with narrative, then builds systems to support it. Gigi sees the product as a whole before others see features."
                                 assignment="Helping AI products feel less like systems and more like something you can trust."
                                 hideName={true}
                                 hideLogo={true}
                                 hideFooter={true}
-                                email="hello@duoduo.studio"
-                                linkedin="https://linkedin.com/in/gigiyuqi"
+                                email="wuyuqi827@gmail.com"
+                                linkedin="https://www.linkedin.com/in/gigiwu/"
                             />
                         </motion.div>
                     </motion.div>
