@@ -54,8 +54,8 @@ function DuoLogo({ delay = 0, label, time, position }) {
 export default function Spring({ london, shenzhen }) {
   return (
     <div className={styles.logoContainer}>
-      <DuoLogo label="LDN" time={london} position="left" />
-      <DuoLogo label="SHENZHEN" time={shenzhen} position="right" delay={0.05} />
+      <DuoLogo label="London" time={london} position="left" />
+      <DuoLogo label="Shanghai" time={shenzhen} position="right" delay={0.05} />
     </div>
   );
 }

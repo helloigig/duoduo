@@ -10,10 +10,21 @@
     align-items: center;
 }
 
+@keyframes logoGlow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px rgba(255, 20, 147, 0.18)); }
+    50%       { filter: drop-shadow(0 0 3.5px rgba(255, 20, 147, 0.42)); }
+}
+
 .duoLogo {
     height: 36px;
     width: auto;
     cursor: pointer;
+    animation: logoGlow 2.8s ease-in-out infinite;
+}
+
+.duoLogo:hover {
+    animation: none;
+    filter: drop-shadow(0 0 4px rgba(255, 20, 147, 0.55));
 }
 
 .timeLabel {

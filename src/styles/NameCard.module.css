@@ -27,7 +27,7 @@
 .avatar {
     width: 160px;
     height: 160px;
-    border-radius: 27px;
+    border-radius: 0;
     background-color: #d0cdc8;
     border: 1.7px solid #000000;
     overflow: hidden;
@@ -106,6 +106,25 @@
     height: auto;
     opacity: 0.35;
     margin-top: 16px;
+}
+
+/* Links section */
+.linksSection {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.linkIcon {
+    color: rgba(0, 0, 0, 0.4);
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.linkIcon:hover {
+    color: rgba(0, 0, 0, 0.85);
 }
 
 /* Footer */

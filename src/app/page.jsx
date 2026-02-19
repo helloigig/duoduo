@@ -11,55 +11,88 @@ function ProjectItem({ project, isActive, onHover }) {
             className={`${styles.projectItem} ${isActive ? styles.projectItemActive : ''}`}
             onMouseEnter={onHover}
         >
-            <span className={styles.projectName}>{project.name}</span>
-            <span className={styles.projectSubtitle}>
-                <span className={styles.projectTag}>{project.tag}</span> for {project.subtitle}
+            <span className={styles.projectNameRow}>
+                <span className={styles.projectName}>{project.name}</span>
+                {project.url && <img src="/arrow.svg" className={styles.projectLinkArrow} alt="" />}
             </span>
+            {(project.tag || project.subtitle) && (
+                <span className={styles.projectSubtitle}>
+                    {project.tag && <span className={styles.projectTag}>{project.tag}</span>}
+                    {project.tag && project.subtitle && ' for '}
+                    {project.subtitle}
+                </span>
+            )}
         </button>
     );
 }
 
 const LEFT_PROJECTS = [
     {
-        name: 'AnyApp',
-        tag: 'Mobile App',
-        subtitle: 'AI Widgets · UI/UX',
-        preview: '/AnyApp.png',
-    },
-    {
-        name: 'Cuto',
-        tag: 'Mobile App',
-        subtitle: 'Wallpaper · Redesign',
-        preview: '/cuto.png',
-    },
-    {
         name: 'Bloc1',
         tag: 'Mobile App',
-        subtitle: 'Gym · Service Design',
+        subtitle: 'Climbing Gym',
         preview: '/Bloc1.png',
+    },
+    {
+        name: 'aFewBottles有几瓶',
+        tag: 'Brand Design',
+        subtitle: 'Wine Distributor',
+        preview: '/aFewBottles.png',
+    },
+    {
+        name: 'Dump Archive',
+        tag: 'Website Design',
+        subtitle: 'Art Organisation',
+        preview: '/dump.mp4',
+        isVideo: true,
+    },
+    {
+        name: 'Kendall Common',
+        tag: 'Website Design',
+        subtitle: 'Real Estate',
+        preview: '/kendall common.mp4',
+        isVideo: true,
+        url: 'https://kendallcommon.com',
+    },
+    {
+        name: 'Galeta',
+        tag: 'Website Design',
+        subtitle: 'Bakery',
+        preview: '/galeta.mp4',
+        isVideo: true,
+        url: 'https://galeta.co.uk',
+    },
+    {
+        name: 'Basecamp Research',
+        tag: 'Website Design',
+        subtitle: 'Research Institute',
+        preview: '/BCR.mp4',
+        isVideo: true,
+        url: 'https://basecamp-research.com',
     },
 ];
 
 const RIGHT_PROJECTS = [
     {
-        name: 'Dify Website',
-        tag: 'Website',
+        name: 'Dify',
+        tag: 'Website Design',
         subtitle: 'AI Platform',
         preview: '/Dify.mp4',
         isVideo: true,
-    },
-    {
-        name: 'Basecamp Research Website',
-        tag: 'Website',
-        subtitle: 'Brand · Research',
-        preview: '/BCR.mp4',
-        isVideo: true,
+        url: 'https://dify.ai',
+        note: 'Multi-language · Built in Framer',
     },
     {
         name: 'AI Platform',
-        tag: 'Platform',
-        subtitle: 'Experience',
+        tag: 'UI/UX Design',
+        subtitle: 'AI Dashboard',
         preview: '/aiplatform.png',
+    },
+    {
+        name: 'ult Search',
+        tag: 'UI/UX & Brand',
+        subtitle: 'AI Search',
+        preview: '/ult.png',
     },
 ];
 
@@ -201,9 +234,10 @@ export default function Home() {
 
     return (
         <main className={styles.page}>
+            {expanded && <div className={styles.previewBackdrop} onClick={() => setExpanded(false)} />}
             {/* Center layout: left / preview / right */}
             <section className={styles.layout} onMouseEnter={pause} onMouseLeave={resume}>
-                <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation left">
+                <nav className={`${styles.navColumn} ${styles.navColumnLeft} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation left">
                     {LEFT_PROJECTS.map((project, index) => (
                         <ProjectItem
                             key={`left-${project.name}-${index}`}
@@ -220,7 +254,6 @@ export default function Home() {
                     aria-label="Project preview area"
                     layout
                     onClick={() => { if (!expanded) setExpanded(true); }}
-                    style={{ cursor: 'pointer' }}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
                 >
                     {ALL_PROJECTS.map((project, i) => (
@@ -259,9 +292,38 @@ export default function Home() {
                             </div>
                         )
                     ))}
+                    {expanded && (
+                        <>
+                            <button
+                                className={styles.previewClose}
+                                onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+                            >
+                                ×
+                            </button>
+                            {(ALL_PROJECTS[activeStep]?.url || ALL_PROJECTS[activeStep]?.note) && (
+                                <div className={styles.previewInfoBar}>
+                                    {ALL_PROJECTS[activeStep].note && (
+                                        <span className={styles.previewInfoNote}>{ALL_PROJECTS[activeStep].note}</span>
+                                    )}
+                                    {ALL_PROJECTS[activeStep].url && (
+                                        <a
+                                            href={ALL_PROJECTS[activeStep].url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.previewVisitBtn}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            Visit site ↗
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </motion.div>
 
-                <nav className={`${styles.navColumn} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation right">
+                <span className={styles.navSectionLabel}>AI Projects</span>
+                <nav className={`${styles.navColumn} ${styles.navColumnRight} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation right">
                     {RIGHT_PROJECTS.map((project, index) => (
                         <ProjectItem
                             key={`right-${project.name}-${index}`}
@@ -295,9 +357,13 @@ export default function Home() {
                                 }}
                             >
                                 <span className={styles.projectName}>{project.name}</span>
-                                <span className={styles.projectSubtitle}>
-                                    <span className={styles.projectTag}>{project.tag}</span> for {project.subtitle}
-                                </span>
+                                {(project.tag || project.subtitle) && (
+                                    <span className={styles.projectSubtitle}>
+                                        {project.tag && <span className={styles.projectTag}>{project.tag}</span>}
+                                        {project.tag && project.subtitle && ' for '}
+                                        {project.subtitle}
+                                    </span>
+                                )}
                             </div>
                         );
                     })}
