@@ -72,12 +72,6 @@
     width: auto;
     display: block;
     object-fit: contain;
-    transition: filter 0.3s ease;
-}
-
-.topNavItem:hover .navAvatar,
-.topNavItemActive .navAvatar {
-    filter: sepia(1) saturate(4) hue-rotate(300deg) brightness(0.9);
 }
 
 /* Cal.com custom floating button */
@@ -99,12 +93,21 @@
     height: 84px;
     width: auto;
     display: block;
-    filter: sepia(1) saturate(2) hue-rotate(300deg) brightness(1.6);
-    transition: filter 0.3s ease;
 }
 
-.calButton:hover .calButtonIcon {
-    filter: sepia(1) saturate(5) hue-rotate(300deg) brightness(0.9);
+.calButtonIconHidden {
+    display: none;
+}
+
+.calLottie {
+    width: 84px;
+    height: 84px;
+    display: none;
+    pointer-events: none;
+}
+
+.calLottieVisible {
+    display: block;
 }
 
 /* Cal.com iframe modal */
@@ -126,6 +129,7 @@
     height: min(520px, 90vh);
     overflow: hidden;
     background: #fff;
+    overscroll-behavior: none;
 }
 
 .calFrame {

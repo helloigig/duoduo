@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import styles from '@/styles/Home.module.css';
 
 function ProjectItem({ project, isActive, onHover }) {
@@ -105,7 +104,6 @@ const LOOPED_PROJECTS = Array.from({ length: LOOP_COUNT }, () => ALL_PROJECTS).f
 export default function Home() {
     const total = ALL_PROJECTS.length;
     const [activeStep, setActiveStep] = useState(0);
-    const [expanded, setExpanded] = useState(false);
     const pausedRef = useRef(false);
     const scrollContainerRef = useRef(null);
     const isUserScrolling = useRef(false);
@@ -122,17 +120,6 @@ export default function Home() {
 
     const pause = useCallback(() => { pausedRef.current = true; }, []);
     const resume = useCallback(() => { pausedRef.current = false; }, []);
-
-    useEffect(() => {
-        if (!expanded) return;
-        const handleClickOutside = (e) => {
-            if (previewRef.current && !previewRef.current.contains(e.target)) {
-                setExpanded(false);
-            }
-        };
-        window.addEventListener('mousedown', handleClickOutside, true);
-        return () => window.removeEventListener('mousedown', handleClickOutside, true);
-    }, [expanded]);
 
     // Play active video on hover, pause others
     useEffect(() => {
@@ -219,7 +206,7 @@ export default function Home() {
     // Autoplay: mobile scrolls the list, desktop increments activeStep
     useEffect(() => {
         const interval = setInterval(() => {
-            if (pausedRef.current || expanded) return;
+            if (pausedRef.current) return;
 
             const isMobile = window.innerWidth <= 768;
             if (isMobile && scrollContainerRef.current) {
@@ -230,14 +217,13 @@ export default function Home() {
         }, 4000);
 
         return () => clearInterval(interval);
-    }, [total, expanded]);
+    }, [total]);
 
     return (
         <main className={styles.page}>
-            {expanded && <div className={styles.previewBackdrop} onClick={() => setExpanded(false)} />}
             {/* Center layout: left / preview / right */}
             <section className={styles.layout} onMouseEnter={pause} onMouseLeave={resume}>
-                <nav className={`${styles.navColumn} ${styles.navColumnLeft} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation left">
+                <nav className={`${styles.navColumn} ${styles.navColumnLeft}`} aria-label="Project navigation left">
                     {LEFT_PROJECTS.map((project, index) => (
                         <ProjectItem
                             key={`left-${project.name}-${index}`}
@@ -248,13 +234,10 @@ export default function Home() {
                     ))}
                 </nav>
 
-                <motion.div
+                <div
                     ref={previewRef}
-                    className={`${styles.preview} ${expanded ? styles.previewExpanded : ''}`}
+                    className={styles.preview}
                     aria-label="Project preview area"
-                    layout
-                    onClick={() => { if (!expanded) setExpanded(true); }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 25 }}
                 >
                     {ALL_PROJECTS.map((project, i) => (
                         project.preview ? (
@@ -292,38 +275,10 @@ export default function Home() {
                             </div>
                         )
                     ))}
-                    {expanded && (
-                        <>
-                            <button
-                                className={styles.previewClose}
-                                onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
-                            >
-                                ×
-                            </button>
-                            {(ALL_PROJECTS[activeStep]?.url || ALL_PROJECTS[activeStep]?.note) && (
-                                <div className={styles.previewInfoBar}>
-                                    {ALL_PROJECTS[activeStep].note && (
-                                        <span className={styles.previewInfoNote}>{ALL_PROJECTS[activeStep].note}</span>
-                                    )}
-                                    {ALL_PROJECTS[activeStep].url && (
-                                        <a
-                                            href={ALL_PROJECTS[activeStep].url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={styles.previewVisitBtn}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            Visit site ↗
-                                        </a>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </motion.div>
+                </div>
 
                 <span className={styles.navSectionLabel}>AI Projects</span>
-                <nav className={`${styles.navColumn} ${styles.navColumnRight} ${expanded ? styles.navColumnHidden : ''}`} aria-label="Project navigation right">
+                <nav className={`${styles.navColumn} ${styles.navColumnRight}`} aria-label="Project navigation right">
                     {RIGHT_PROJECTS.map((project, index) => (
                         <ProjectItem
                             key={`right-${project.name}-${index}`}

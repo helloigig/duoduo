@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import Lottie from 'lottie-react';
 import styles from '@/styles/Shell.module.css';
 import Spring from '@/components/Spring';
 import NameCard from '@/components/NameCard';
+import callAnimation from '../../public/call.json';
 
 function useClocks() {
     const [times, setTimes] = useState({ london: '', shenzhen: '' });
@@ -38,9 +40,21 @@ export default function PageShell({ children }) {
     const [aboutOpen, setAboutOpen] = useState(false);
     const [calOpen, setCalOpen] = useState(false);
     const [avatarHovered, setAvatarHovered] = useState(false);
+    const [callHovered, setCallHovered] = useState(false);
     const [cardRotation, setCardRotation] = useState(-3);
+    const lottieRef = useRef(null);
 
     const isWorkActive = pathname === '/';
+
+    const handleCallEnter = () => {
+        setCallHovered(true);
+        lottieRef.current?.play();
+    };
+
+    const handleCallLeave = () => {
+        setCallHovered(false);
+        lottieRef.current?.stop();
+    };
 
     return (
         <div className={styles.shell}>
@@ -66,7 +80,11 @@ export default function PageShell({ children }) {
                         onMouseLeave={() => setAvatarHovered(false)}
                         aria-label="About Gigi"
                     >
-                        <img src={avatarHovered ? '/avatar-pink.svg' : '/avatar-black.svg'} className={styles.navAvatar} alt="About" />
+                        <img
+                            src={avatarHovered ? '/avatar-pink.svg' : '/avatar-black.svg'}
+                            className={styles.navAvatar}
+                            alt="About"
+                        />
                     </button>
                 </nav>
             </header>
@@ -80,9 +98,22 @@ export default function PageShell({ children }) {
                 type="button"
                 className={styles.calButton}
                 onClick={() => setCalOpen(true)}
+                onMouseEnter={handleCallEnter}
+                onMouseLeave={handleCallLeave}
                 aria-label="Book a call"
             >
-                <img src="/book a call.svg" className={styles.calButtonIcon} alt="Book a call" />
+                <img
+                    src="/call 0.svg"
+                    className={`${styles.calButtonIcon} ${callHovered ? styles.calButtonIconHidden : ''}`}
+                    alt="Book a call"
+                />
+                <Lottie
+                    lottieRef={lottieRef}
+                    animationData={callAnimation}
+                    loop={true}
+                    autoplay={false}
+                    className={`${styles.calLottie} ${callHovered ? styles.calLottieVisible : ''}`}
+                />
             </button>
 
             <AnimatePresence>
@@ -107,6 +138,7 @@ export default function PageShell({ children }) {
                                 src="https://cal.com/duo-duo/15min?theme=light&embed=true"
                                 className={styles.calFrame}
                                 title="Book a call"
+                                scrolling="no"
                             />
                         </motion.div>
                     </motion.div>

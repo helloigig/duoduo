@@ -55,7 +55,7 @@ export default function Spring({ london, shenzhen }) {
   return (
     <div className={styles.logoContainer}>
       <DuoLogo label="London" time={london} position="left" />
-      <DuoLogo label="Shanghai" time={shenzhen} position="right" delay={0.05} />
+      <DuoLogo label="Shenzhen" time={shenzhen} position="right" delay={0.05} />
     </div>
   );
 }
