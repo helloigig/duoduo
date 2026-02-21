@@ -33,12 +33,6 @@ const LEFT_PROJECTS = [
         preview: '/Bloc1.png',
     },
     {
-        name: 'aFewBottles有几瓶',
-        tag: 'Brand Design',
-        subtitle: 'Wine Distributor',
-        preview: '/aFewBottles.png',
-    },
-    {
         name: 'Dump Archive',
         tag: 'Website Design',
         subtitle: 'Art Organisation',
@@ -86,12 +80,6 @@ const RIGHT_PROJECTS = [
         tag: 'UI/UX Design',
         subtitle: 'AI Dashboard',
         preview: '/aiplatform.png',
-    },
-    {
-        name: 'ult Search',
-        tag: 'UI/UX & Brand',
-        subtitle: 'AI Search',
-        preview: '/ult.png',
     },
 ];
 
