@@ -18,8 +18,8 @@
     max-width: 1400px;
     display: grid;
     grid-template-columns: 220px minmax(360px, 1fr) 220px;
-    grid-template-rows: auto auto;
     column-gap: 80px;
+    align-items: center;
 }
 
 /* AI section label occupies row 1, col 3 only */
@@ -39,7 +39,6 @@
     flex-direction: column;
     gap: 20px;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-    grid-row: 2;
 }
 
 .navColumnLeft {
@@ -132,7 +131,6 @@
     justify-items: center;
     cursor: default;
     grid-column: 2;
-    grid-row: 2;
 }
 
 .preview > * {
