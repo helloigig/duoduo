@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Lottie from 'lottie-react';
@@ -35,7 +33,6 @@ function useClocks() {
 
 
 export default function PageShell({ children }) {
-    const pathname = usePathname();
     const { london, shenzhen } = useClocks();
     const [aboutOpen, setAboutOpen] = useState(false);
     const [calOpen, setCalOpen] = useState(false);
@@ -43,8 +40,6 @@ export default function PageShell({ children }) {
     const [callHovered, setCallHovered] = useState(false);
     const [cardRotation, setCardRotation] = useState(-3);
     const lottieRef = useRef(null);
-
-    const isWorkActive = pathname === '/';
 
     const handleCallEnter = () => {
         setCallHovered(true);
@@ -63,12 +58,6 @@ export default function PageShell({ children }) {
                     <Spring london={london} shenzhen={shenzhen} />
                 </div>
                 <nav className={styles.topNav} aria-label="Site navigation">
-                    <Link
-                        href="/"
-                        className={`${styles.topNavItem} ${isWorkActive ? styles.topNavItemActive : ''}`}
-                    >
-                        Work
-                    </Link>
                     <button
                         type="button"
                         className={styles.topNavItem}

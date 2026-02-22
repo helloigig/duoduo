@@ -9,6 +9,7 @@ function ProjectItem({ project, isActive, onHover }) {
             type="button"
             className={`${styles.projectItem} ${isActive ? styles.projectItemActive : ''}`}
             onMouseEnter={onHover}
+            onClick={() => { if (project.url) window.open(project.url, '_blank'); }}
         >
             <span className={styles.projectNameRow}>
                 <span className={styles.projectName}>{project.name}</span>
@@ -27,17 +28,40 @@ function ProjectItem({ project, isActive, onHover }) {
 
 const LEFT_PROJECTS = [
     {
-        name: 'Bloc1',
-        tag: 'Mobile App',
-        subtitle: 'Climbing Gym',
-        preview: '/Bloc1.png',
+        name: 'Dify',
+        tag: 'Website Design',
+        subtitle: 'AI Platform',
+        preview: '/Dify.mp4',
+        isVideo: true,
+        url: 'https://dify.ai',
     },
     {
-        name: 'Dump Archive',
-        tag: 'Website Design',
-        subtitle: 'Art Organisation',
-        preview: '/dump.mp4',
-        isVideo: true,
+        name: 'AnyApp',
+        tag: 'UI/UX Design',
+        subtitle: 'AI Widgets App',
+        preview: '/AnyApp.png',
+    },
+    {
+        name: 'AI Platform',
+        tag: 'UI/UX Design',
+        subtitle: 'AI Dashboard',
+        preview: '/aiplatform.png',
+    },
+    {
+        name: 'Cuto',
+        tag: 'Redesign',
+        subtitle: 'Wallpaper App',
+        preview: '/cuto.png',
+        url: 'https://apps.apple.com/us/app/cuto-wallpaper/id1068086465',
+    },
+];
+
+const RIGHT_PROJECTS = [
+    {
+        name: 'Bloc1',
+        tag: 'UI/UX Design',
+        subtitle: 'Climbing Gym App',
+        preview: '/Bloc1.png',
     },
     {
         name: 'Kendall Common',
@@ -62,24 +86,6 @@ const LEFT_PROJECTS = [
         preview: '/BCR.mp4',
         isVideo: true,
         url: 'https://basecamp-research.com',
-    },
-];
-
-const RIGHT_PROJECTS = [
-    {
-        name: 'Dify',
-        tag: 'Website Design',
-        subtitle: 'AI Platform',
-        preview: '/Dify.mp4',
-        isVideo: true,
-        url: 'https://dify.ai',
-        note: 'Multi-language · Built in Framer',
-    },
-    {
-        name: 'AI Platform',
-        tag: 'UI/UX Design',
-        subtitle: 'AI Dashboard',
-        preview: '/aiplatform.png',
     },
 ];
 
@@ -265,7 +271,6 @@ export default function Home() {
                     ))}
                 </div>
 
-                <span className={styles.navSectionLabel}>AI Projects</span>
                 <nav className={`${styles.navColumn} ${styles.navColumnRight}`} aria-label="Project navigation right">
                     {RIGHT_PROJECTS.map((project, index) => (
                         <ProjectItem
