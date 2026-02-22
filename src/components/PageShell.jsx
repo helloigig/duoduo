@@ -69,6 +69,12 @@ export default function PageShell({ children }) {
                     >
                         Work
                     </Link>
+                    <Link
+                        href="/brief"
+                        className={`${styles.topNavItem} ${pathname === '/brief' ? styles.topNavItemActive : ''}`}
+                    >
+                        Brief
+                    </Link>
                     <button
                         type="button"
                         className={styles.topNavItem}
