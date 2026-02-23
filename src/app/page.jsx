@@ -72,28 +72,6 @@ Map the client's situation to the most fitting tier based on scope, complexity, 
 Slide within the range based on signals: number of surfaces, platforms, whether a design system is needed, research depth, existing assets. Be honest — if it's genuinely unclear, pick the lower end and say so in "reason".`;
 
 // ── PROJECT DATA ──────────────────────────────────────────────────────────────
-function ProjectItem({ project, isActive, onHover }) {
-    return (
-        <button
-            type="button"
-            className={`${homeStyles.projectItem} ${isActive ? homeStyles.projectItemActive : ''}`}
-            onMouseEnter={onHover}
-            onClick={() => { if (project.url) window.open(project.url, '_blank'); }}
-        >
-            <span className={homeStyles.projectNameRow}>
-                <span className={homeStyles.projectName}>{project.name}</span>
-                {project.url && <img src="/arrow.svg" className={homeStyles.projectLinkArrow} alt="" />}
-            </span>
-            {(project.tag || project.subtitle) && (
-                <span className={homeStyles.projectSubtitle}>
-                    {project.tag && <span className={homeStyles.projectTag}>{project.tag}</span>}
-                    {project.tag && project.subtitle && ' for '}
-                    {project.subtitle}
-                </span>
-            )}
-        </button>
-    );
-}
 
 const LEFT_PROJECTS = [
     { name: 'Dify', tag: 'Website Design', subtitle: 'AI Platform', preview: '/Dify.mp4', isVideo: true, url: 'https://dify.ai' },
@@ -135,16 +113,25 @@ export default function Home() {
     const [activeStep, setActiveStep] = useState(0);
     const pausedRef = useRef(false);
     const scrollContainerRef = useRef(null);
-    const isUserScrolling = useRef(false);
     const isRecentering = useRef(false);
     const scrollTimeout = useRef(null);
-    const activeSide = activeStep < LEFT_PROJECTS.length ? 'left' : 'right';
-    const activeIndex = activeSide === 'left' ? activeStep : activeStep - LEFT_PROJECTS.length;
-    const previewRef = useRef(null);
+    const carouselRef = useRef(null);
+    const desktopItemRefs = useRef([]);
+    const desktopLoopIdxRef = useRef(0);
     const mobilePreviewRef = useRef(null);
     const activeStepRef = useRef(activeStep);
     activeStepRef.current = activeStep;
     const midStart = Math.floor(LOOP_COUNT / 2) * total;
+
+    const scrollToLoopItem = useCallback((idx, smooth = true) => {
+        const el = carouselRef.current;
+        const item = desktopItemRefs.current[idx];
+        if (!el || !item) return;
+        el.scrollTo({
+            top: item.offsetTop - (el.clientHeight - item.offsetHeight) / 2,
+            behavior: smooth ? 'smooth' : 'auto',
+        });
+    }, []);
 
     const pause = useCallback(() => { pausedRef.current = true; }, []);
     const resume = useCallback(() => { pausedRef.current = false; }, []);
@@ -233,29 +220,14 @@ export default function Home() {
     }, []);
 
     // ── Portfolio effects ─────────────────────────────────────────────────────
-    useEffect(() => {
-        const playActive = () => {
-            previewRef.current?.querySelectorAll('video[data-project-index]').forEach((video) => {
-                const idx = parseInt(video.dataset.projectIndex, 10);
-                if (idx === activeStep) { if (video.src) video.play().catch(() => {}); }
-                else video.pause();
-            });
-            mobilePreviewRef.current?.querySelectorAll('video[data-project-index]').forEach((video) => {
-                const idx = parseInt(video.dataset.projectIndex, 10);
-                if (idx === activeStep) { if (video.src) video.play().catch(() => {}); }
-                else video.pause();
-            });
-        };
-        playActive();
-        const id = setTimeout(playActive, 100);
-        return () => clearTimeout(id);
-    }, [activeStep]);
 
+    // Mobile: init scroll position
     useEffect(() => {
         const el = scrollContainerRef.current;
         if (el) el.scrollTop = midStart * MOBILE_ITEM_HEIGHT;
     }, [midStart]);
 
+    // Mobile: detect active item on scroll + infinite loop recenter
     useEffect(() => {
         const el = scrollContainerRef.current;
         if (!el) return;
@@ -277,31 +249,99 @@ export default function Home() {
                 el.style.scrollBehavior = '';
                 requestAnimationFrame(() => { isRecentering.current = false; });
             }
-            isUserScrolling.current = true;
             pausedRef.current = true;
             clearTimeout(scrollTimeout.current);
-            scrollTimeout.current = setTimeout(() => {
-                isUserScrolling.current = false;
-                pausedRef.current = false;
-            }, 2000);
+            scrollTimeout.current = setTimeout(() => { pausedRef.current = false; }, 2000);
         };
 
         el.addEventListener('scroll', handleScroll, { passive: true });
         return () => el.removeEventListener('scroll', handleScroll);
     }, [total, midStart]);
 
+    // Desktop carousel: init scroll to middle of looped list
     useEffect(() => {
-        const interval = setInterval(() => {
+        const id = requestAnimationFrame(() => {
+            desktopLoopIdxRef.current = midStart;
+            scrollToLoopItem(midStart, false);
+        });
+        return () => cancelAnimationFrame(id);
+    }, [midStart, scrollToLoopItem]);
+
+    // Desktop carousel: detect active item + infinite loop recentering
+    useEffect(() => {
+        const el = carouselRef.current;
+        if (!el) return;
+
+        const handleScroll = () => {
+            const center = el.scrollTop + el.clientHeight / 2;
+            let closestIdx = midStart;
+            let minDist = Infinity;
+            desktopItemRefs.current.forEach((item, i) => {
+                if (!item) return;
+                const dist = Math.abs((item.offsetTop + item.offsetHeight / 2) - center);
+                if (dist < minDist) { minDist = dist; closestIdx = i; }
+            });
+
+            setActiveStep(((closestIdx % total) + total) % total);
+            desktopLoopIdxRef.current = closestIdx;
+
+            // Silently recenter when near edges
+            if (closestIdx < total * 3 || closestIdx > LOOPED_PROJECTS.length - total * 3) {
+                const equivalent = midStart + (((closestIdx % total) + total) % total);
+                const target = desktopItemRefs.current[equivalent];
+                if (target) {
+                    el.style.scrollBehavior = 'auto';
+                    el.scrollTop = target.offsetTop - (el.clientHeight - target.offsetHeight) / 2;
+                    el.style.scrollBehavior = '';
+                    desktopLoopIdxRef.current = equivalent;
+                }
+            }
+
+            pausedRef.current = true;
+            clearTimeout(scrollTimeout.current);
+            scrollTimeout.current = setTimeout(() => { pausedRef.current = false; }, 2000);
+        };
+
+        el.addEventListener('scroll', handleScroll, { passive: true });
+        return () => el.removeEventListener('scroll', handleScroll);
+    }, [total, midStart]);
+
+    // Auto-advance
+    useEffect(() => {
+        let interval;
+
+        const advance = () => {
             if (pausedRef.current) return;
             const isMobile = window.innerWidth <= 768;
             if (isMobile && scrollContainerRef.current) {
                 scrollContainerRef.current.scrollBy({ top: MOBILE_ITEM_HEIGHT, behavior: 'smooth' });
             } else if (!isMobile) {
-                setActiveStep((prev) => (prev + 1) % total);
+                let nextIdx = desktopLoopIdxRef.current + 1;
+                if (nextIdx > LOOPED_PROJECTS.length - total * 3) {
+                    nextIdx = midStart + (nextIdx % total);
+                }
+                desktopLoopIdxRef.current = nextIdx;
+                setActiveStep(nextIdx % total);
+                scrollToLoopItem(nextIdx);
             }
-        }, 4000);
-        return () => clearInterval(interval);
-    }, [total]);
+        };
+
+        const start = () => { interval = setInterval(advance, 8000); };
+        const stop = () => clearInterval(interval);
+
+        // Restart interval fresh when tab regains focus to prevent accumulated callbacks
+        const handleVisibility = () => {
+            if (document.hidden) { stop(); } else { stop(); start(); }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibility);
+        start();
+
+        return () => {
+            stop();
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
+    }, [total, midStart, scrollToLoopItem]);
 
     // ── Render ────────────────────────────────────────────────────────────────
     return (
@@ -315,7 +355,7 @@ export default function Home() {
                     {!result && !loading && !followup && (
                         <div className={aboutStyles.formSectionCentered}>
                             <h1 className={aboutStyles.pageTitle}>
-                                How <TitleDuoduo styles={aboutStyles} /> could help you?
+                                How could <TitleDuoduo styles={aboutStyles} /> help you?
                             </h1>
                             <div className={aboutStyles.inputCard}>
                                 <div className={aboutStyles.mainWrap}>
@@ -426,61 +466,51 @@ export default function Home() {
             {/* ── PORTFOLIO SECTION ── */}
             <section className={homeStyles.portfolioSection}>
 
-                {/* Desktop layout */}
-                <section className={homeStyles.layout} onMouseEnter={pause} onMouseLeave={resume}>
-                    <nav className={`${homeStyles.navColumn} ${homeStyles.navColumnLeft}`}>
-                        {LEFT_PROJECTS.map((project, index) => (
-                            <ProjectItem
-                                key={`left-${project.name}-${index}`}
-                                project={project}
-                                isActive={activeSide === 'left' && index === activeIndex}
-                                onHover={() => setActiveStep(index)}
-                            />
-                        ))}
-                    </nav>
-                    <div ref={previewRef} className={homeStyles.preview}>
-                        {ALL_PROJECTS.map((project, i) => (
-                            project.preview ? (
+                {/* Desktop carousel */}
+                <div
+                    ref={carouselRef}
+                    className={homeStyles.carouselTrack}
+                    onMouseEnter={pause}
+                    onMouseLeave={resume}
+                >
+                    {LOOPED_PROJECTS.map((project, i) => {
+                        const realIdx = ((i % total) + total) % total;
+                        return (
+                        <div
+                            key={`dc-${i}`}
+                            ref={(el) => (desktopItemRefs.current[i] = el)}
+                            className={`${homeStyles.carouselItem} ${realIdx === activeStep ? homeStyles.carouselItemActive : ''}`}
+                            onClick={() => { if (project.url) window.open(project.url, '_blank'); }}
+                            style={{ cursor: project.url ? 'pointer' : 'default' }}
+                        >
+                            {project.preview && (
                                 project.isVideo ? (
                                     <video
-                                        key={project.name}
-                                        data-project-index={i}
-                                        className={`${homeStyles.previewImage} ${i === activeStep ? homeStyles.previewVisible : homeStyles.previewHidden}`}
-                                        src={i === activeStep ? project.preview : undefined}
-                                        preload={i === activeStep ? 'auto' : 'none'}
-                                        loop muted playsInline draggable={false}
-                                        onCanPlay={(e) => { if (activeStepRef.current === i) e.target.play().catch(() => {}); }}
+                                        className={homeStyles.carouselMedia}
+                                        src={project.preview}
+                                        loop muted playsInline autoPlay draggable={false}
                                     />
                                 ) : (
                                     <img
-                                        key={project.name}
-                                        className={`${homeStyles.previewImage} ${i === activeStep ? homeStyles.previewVisible : homeStyles.previewHidden}`}
+                                        className={homeStyles.carouselMedia}
                                         src={project.preview}
                                         alt={project.name}
                                         draggable={false}
                                     />
                                 )
-                            ) : (
-                                <div
-                                    key={project.name}
-                                    className={`${homeStyles.previewInner} ${i === activeStep ? homeStyles.previewVisible : homeStyles.previewHidden}`}
-                                >
-                                    <span className={homeStyles.previewLabel}>{project.name}</span>
-                                </div>
-                            )
-                        ))}
-                    </div>
-                    <nav className={`${homeStyles.navColumn} ${homeStyles.navColumnRight}`}>
-                        {RIGHT_PROJECTS.map((project, index) => (
-                            <ProjectItem
-                                key={`right-${project.name}-${index}`}
-                                project={project}
-                                isActive={activeSide === 'right' && index === activeIndex}
-                                onHover={() => setActiveStep(LEFT_PROJECTS.length + index)}
-                            />
-                        ))}
-                    </nav>
-                </section>
+                            )}
+                            <div className={homeStyles.carouselOverlay}>
+                                <span className={homeStyles.carouselOverlayName}>{project.name}</span>
+                                <span className={homeStyles.carouselOverlayMeta}>
+                                    {project.tag}
+                                    {project.tag && project.subtitle && ' · '}
+                                    {project.subtitle}
+                                </span>
+                            </div>
+                        </div>
+                        );
+                    })}
+                </div>
 
                 {/* Mobile layout */}
                 <section className={homeStyles.mobileLayout}>

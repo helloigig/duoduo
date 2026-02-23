@@ -14,6 +14,16 @@
 /* Combined page wrapper (used on homepage) */
 .combinedPage {
     height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+}
+
+/* About section — left panel */
+.aboutSection {
+    width: 50%;
+    min-width: 380px;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
@@ -22,13 +32,24 @@
     display: flex;
     flex-direction: column;
 }
-.combinedPage::-webkit-scrollbar { display: none; }
+.aboutSection::-webkit-scrollbar { display: none; }
 
-/* About section inside combined page */
-.aboutSection {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
+/* Mobile: stack vertically */
+@media (max-width: 900px) {
+    .combinedPage {
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    .aboutSection {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        min-height: 100%;
+        overflow-y: visible;
+        border-right: none;
+        border-bottom: 1px solid #e5e5e5;
+    }
 }
 
 /* Inner content */
@@ -37,7 +58,7 @@
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
-    padding: 0 24px 120px;
+    padding: 0 40px 120px 24px;
     font-family: var(--font-geist-sans), sans-serif;
     font-size: 14px;
     line-height: 1.6;
@@ -130,13 +151,21 @@
 .intentBtnActive .ibSub { color: rgba(255,255,255,0.38); }
 
 /* ── INPUT CARD */
+@keyframes cardGlow {
+    0%, 100% { box-shadow: inset 0 0 6px 1px rgba(255, 20, 147, 0.12); }
+    50%       { box-shadow: inset 0 0 14px 3px rgba(255, 20, 147, 0.28); }
+}
+
 .inputCard {
-    border: 1px solid #e5e5e5;
     border-radius: 4px;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    animation: cardGlow 2.8s ease-in-out infinite;
 }
-.inputCard:focus-within { border-color: #0d0d0d; }
+.inputCard:focus-within {
+    animation: none;
+    box-shadow: inset 0 0 16px 4px rgba(255, 20, 147, 0.38);
+}
 .mainWrap { padding: 20px 24px 14px; }
 .fieldLabel {
     font-size: 10px;
