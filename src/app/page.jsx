@@ -4,13 +4,13 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import aboutStyles from './about/about.module.css';
 import homeStyles from '@/styles/Home.module.css';
 
-function TitleDuoduo({ styles }) {
+function TitleDuoduo({ styles, onHoverChange }) {
     const [hovered, setHovered] = useState(false);
     return (
         <span
             className={styles.titleDuoduo}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            onMouseEnter={() => { setHovered(true); onHoverChange?.(true); }}
+            onMouseLeave={() => { setHovered(false); onHoverChange?.(false); }}
         >
             <em style={{ color: hovered ? '#FF2EDC' : 'inherit' }}>duoduo</em>
             {' '}
@@ -92,10 +92,35 @@ const MOBILE_ITEM_HEIGHT = 52;
 const LOOP_COUNT = 20;
 const LOOPED_PROJECTS = Array.from({ length: LOOP_COUNT }, () => ALL_PROJECTS).flat();
 
+const LOADING_MSGS = [
+    'Decoding the vibe...',
+  'Logic in progress...',
+  'Un-complicating it...',
+  'Polishing the soul...',
+  'Translating your intent...',
+  'Mapping the friction...',
+  'Filtering the noise...',
+  'Extracting the core...',
+  'Sculpting the flow...',
+  'Weighting the pixels...',
+  'Sensing the rhythm...',
+  'Aligning the intuition...',
+  'Tracing the spark...',
+  'Structuring the silence...',
+  'Decompressing the brief...',
+  'Designing the invisible...',
+  'Syncing the logic...',
+  'Refining the pulse...',
+  'Drafting the essence...',
+  'Almost there, stay cool.'
+];
+
 // ── COMBINED PAGE ─────────────────────────────────────────────────────────────
 export default function Home() {
     // About state
+    const [titleHovered, setTitleHovered] = useState(false);
     const [mainInput, setMainInput] = useState('');
+    const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
     const [submittedText, setSubmittedText] = useState('');
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -211,6 +236,13 @@ export default function Home() {
     };
 
     const openCall = () => window.dispatchEvent(new CustomEvent('open-cal'));
+
+    // Cycle loading messages
+    useEffect(() => {
+        if (!loading) { setLoadingMsgIdx(0); return; }
+        const id = setInterval(() => setLoadingMsgIdx(i => i + 1), 2200);
+        return () => clearInterval(id);
+    }, [loading]);
 
     // ── Scroll-to-top event (triggered by avatar click in PageShell) ──────────
     useEffect(() => {
@@ -355,9 +387,11 @@ export default function Home() {
                     {!result && !loading && !followup && (
                         <div className={aboutStyles.formSectionCentered}>
                             <h1 className={aboutStyles.pageTitle}>
-                                How could <TitleDuoduo styles={aboutStyles} /> help you?
+                                How could <TitleDuoduo styles={aboutStyles} onHoverChange={setTitleHovered} /> help you?
                             </h1>
-                            <div className={aboutStyles.inputCard}>
+                            <div className={aboutStyles.inputCardFlip}>
+                            <div className={`${aboutStyles.inputCardInner} ${titleHovered ? aboutStyles.inputCardFlipped : ''}`}>
+                            <div className={`${aboutStyles.inputCard} ${aboutStyles.inputCardFront}`}>
                                 <div className={aboutStyles.mainWrap}>
                                     <label className={aboutStyles.fieldLabel}>Tell us what you're working on</label>
                                     <textarea
@@ -376,27 +410,45 @@ export default function Home() {
                                         <span>{loading ? 'Reading…' : 'Send'}</span>
                                     </button>
                                 </div>
+                            </div>{/* inputCardFront */}
+                            <div className={aboutStyles.inputCardBack}>
+                                <p className={aboutStyles.cardBackText}>
+                                    Duoduo is a product design studio founded by <span className={aboutStyles.cardBackPlayfair}>Gigi & Kiwi</span>.<br />
+                                    Operating between <span className={aboutStyles.cardBackPlayfair}>London and Shenzhen</span>.<br />
+                                    We help people turn ideas into tangible products.<br />
+                                    Aligning vision, experience, and production from day one.
+                                </p>
                             </div>
+                            </div>{/* inputCardInner */}
+                            </div>{/* inputCardFlip */}
                             {error && <div className={aboutStyles.error}>{error}</div>}
                         </div>
                     )}
 
-                    {/* Quote — shown after submit */}
-                    {(result || loading || followup) && submittedText && (
-                        <div className={aboutStyles.submittedTop}>
+                    {/* Quote + loading centered during thinking */}
+                    {loading && submittedText && (
+                        <div className={aboutStyles.loadingCentered}>
                             <blockquote className={aboutStyles.userQuote}>{submittedText}</blockquote>
+                            <div className={aboutStyles.loading}>
+                                <div className={aboutStyles.dots}>
+                                    <span className={aboutStyles.dot} />
+                                    <span className={aboutStyles.dot} />
+                                    <span className={aboutStyles.dot} />
+                                </div>
+                                <div
+                                    key={loadingMsgIdx}
+                                    className={aboutStyles.loadingMsg}
+                                >
+                                    {LOADING_MSGS[loadingMsgIdx % LOADING_MSGS.length]}
+                                </div>
+                            </div>
                         </div>
                     )}
 
-                    {/* Loading */}
-                    {loading && (
-                        <div className={aboutStyles.loading}>
-                            <div className={aboutStyles.dots}>
-                                <span className={aboutStyles.dot} />
-                                <span className={aboutStyles.dot} />
-                                <span className={aboutStyles.dot} />
-                            </div>
-                            <div className={aboutStyles.loadingMsg}>Thinking about your situation…</div>
+                    {/* Quote at top — once result or follow-up is ready */}
+                    {(result || followup) && submittedText && (
+                        <div className={aboutStyles.submittedTop}>
+                            <blockquote className={aboutStyles.userQuote}>{submittedText}</blockquote>
                         </div>
                     )}
 
