@@ -449,14 +449,14 @@ export default function Home() {
                             <div className={`${aboutStyles.inputCardInner} ${titleHovered ? aboutStyles.inputCardFlipped : ''}`}>
                             <div className={`${aboutStyles.inputCard} ${aboutStyles.inputCardFront}`}>
                                 <div className={aboutStyles.mainWrap}>
-                                    <label className={aboutStyles.fieldLabel}>Tell us what you're working on</label>
+                                    <label className={aboutStyles.fieldLabel}>WHAT’S BREWING?</label>
                                     <textarea
                                         className={aboutStyles.mainTextarea}
                                         rows={5}
                                         value={mainInput}
                                         onChange={(e) => setMainInput(e.target.value)}
                                         onKeyDown={handleMainKeyDown}
-                                        placeholder="What are you building or fixing, and what's making it hard right now? A few sentences is enough."
+                                        placeholder="Tell us the what, why, and for whom. We’ll solve the how."
                                     />
                                 </div>
                                 <div className={aboutStyles.cardFoot}>
