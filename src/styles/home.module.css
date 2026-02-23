@@ -8,8 +8,103 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 100px 80px;
+    padding: 100px 120px;
     box-sizing: border-box;
+}
+
+/* Portfolio section inside combined page — full-screen second snap */
+.portfolioSection {
+    width: 100%;
+    height: 100svh;
+    flex-shrink: 0;
+    overflow: hidden;
+    background-color: #ffffff;
+    scroll-snap-align: start;
+}
+
+/* ── DESKTOP CAROUSEL — horizontal ── */
+.carouselTrack {
+    width: 100%;
+    height: 100%;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 22vw;
+    gap: 32px;
+    box-sizing: border-box;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(0,0,0,0.5) 8%,
+        rgba(0,0,0,1) 18%,
+        rgba(0,0,0,1) 82%,
+        rgba(0,0,0,0.5) 92%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(0,0,0,0.5) 8%,
+        rgba(0,0,0,1) 18%,
+        rgba(0,0,0,1) 82%,
+        rgba(0,0,0,0.5) 92%,
+        transparent 100%
+    );
+}
+.carouselTrack::-webkit-scrollbar { display: none; }
+
+.carouselItem {
+    flex-shrink: 0;
+    width: clamp(280px, 40vw, 600px);
+    aspect-ratio: 4 / 3;
+    position: relative;
+    overflow: hidden;
+    background: #e4e4e4;
+}
+
+.carouselMedia {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
+.carouselOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 48px 24px 24px;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    pointer-events: none;
+}
+
+.carouselItem:hover .carouselOverlay { opacity: 1; }
+
+.carouselOverlayName {
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.carouselOverlayMeta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 768px) {
+    .carouselTrack { display: none; }
 }
 
 /* Center layout */
@@ -290,6 +385,62 @@
     z-index: 99;
 }
 
+/* ── DESKTOP FULL PREVIEW (replaces 3-col layout) */
+.previewDesktop {
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background-color: #e4e4e4;
+    position: relative;
+    overflow: hidden;
+}
+
+.previewDesktop > * {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+/* Hover info overlay */
+.previewOverlay {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 40px 24px 24px;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.previewDesktop:hover .previewOverlay {
+    opacity: 1;
+}
+
+.previewOverlayName {
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.previewOverlayMeta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.01em;
+}
+
+/* Hidden on mobile */
+@media (max-width: 768px) {
+    .previewDesktop { display: none; }
+}
+
 /* Mobile layout — hidden on desktop */
 .mobileLayout {
     display: none;
@@ -359,7 +510,7 @@
     display: grid;
     align-items: center;
     justify-items: center;
-    margin-top: 24px;
+    margin-top: 32px;
 }
 
 .mobilePreview > * {
@@ -375,20 +526,27 @@
         overflow: hidden;
     }
 
+    .portfolioSection {
+        padding: 0;
+    }
+
     .layout {
         display: none;
     }
 
     .mobileLayout {
         display: flex;
-        flex: 1;
-        min-height: 0;
+        height: 100%;
         flex-direction: column;
+        justify-content: center;
+        gap: 24px;
+        padding: 24px 0;
+        box-sizing: border-box;
     }
 
     .mobileScrollContainer {
-        flex: 1;
-        min-height: 0;
+        height: 180px;
+        flex: none;
     }
 
     .mobilePreview {
