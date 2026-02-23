@@ -11,50 +11,32 @@
 }
 .page::-webkit-scrollbar { display: none; }
 
-/* Combined page wrapper (used on homepage) */
+/* Combined page wrapper (used on homepage) — vertical snap */
 .combinedPage {
-    height: 100%;
-    overflow: hidden;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    height: 100svh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
 }
 
-/* About section — left panel */
+/* About section — full-screen first snap */
 .aboutSection {
-    width: 50%;
-    min-width: 380px;
-    height: 100%;
+    width: 100%;
+    min-width: 0;
+    height: 100svh;
+    flex-shrink: 0;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
 }
 .aboutSection::-webkit-scrollbar { display: none; }
-
-/* Mobile: two full-screen snapping sections */
-@media (max-width: 900px) {
-    .combinedPage {
-        flex-direction: column;
-        height: 100svh;
-        overflow-y: scroll;
-        overflow-x: hidden;
-        scroll-snap-type: y mandatory;
-    }
-    .aboutSection {
-        width: 100%;
-        min-width: 0;
-        height: 100svh;
-        min-height: unset;
-        flex-shrink: 0;
-        overflow-y: auto;
-        border-right: none;
-        border-bottom: none;
-        scroll-snap-align: start;
-    }
-}
 
 /* Inner content */
 .inner {
@@ -208,7 +190,7 @@
     text-align: left;
     line-height: 1.5;
     color: #0d0d0d;
-    font-size: clamp(14px, 2vw, 17px);
+    font-size: clamp(16px, 2vw, 19px);
     margin: 0;
 }
 .cardBackPlayfair {

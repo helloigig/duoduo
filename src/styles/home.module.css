@@ -12,31 +12,31 @@
     box-sizing: border-box;
 }
 
-/* Portfolio section inside combined page — right panel */
+/* Portfolio section inside combined page — full-screen second snap */
 .portfolioSection {
-    flex: 1;
-    height: 100%;
+    width: 100%;
+    height: 100svh;
+    flex-shrink: 0;
     overflow: hidden;
     background-color: #ffffff;
+    scroll-snap-align: start;
 }
 
-/* ── DESKTOP CAROUSEL ── */
+/* ── DESKTOP CAROUSEL — horizontal ── */
 .carouselTrack {
+    width: 100%;
     height: 100%;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
+    overflow-x: scroll;
+    overflow-y: hidden;
     scrollbar-width: none;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    padding: 80px 100px;
-    gap: 24px;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 22vw;
+    gap: 32px;
     box-sizing: border-box;
-}
-.carouselTrack::-webkit-scrollbar { display: none; }
-.carouselTrack {
     mask-image: linear-gradient(
-        to bottom,
+        to right,
         transparent 0%,
         rgba(0,0,0,0.5) 8%,
         rgba(0,0,0,1) 18%,
@@ -45,7 +45,7 @@
         transparent 100%
     );
     -webkit-mask-image: linear-gradient(
-        to bottom,
+        to right,
         transparent 0%,
         rgba(0,0,0,0.5) 8%,
         rgba(0,0,0,1) 18%,
@@ -54,23 +54,15 @@
         transparent 100%
     );
 }
+.carouselTrack::-webkit-scrollbar { display: none; }
 
 .carouselItem {
     flex-shrink: 0;
-    width: 100%;
+    width: clamp(280px, 40vw, 600px);
     aspect-ratio: 4 / 3;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
     position: relative;
     overflow: hidden;
     background: #e4e4e4;
-    transform: scale(0.80);
-    transform-origin: center;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.carouselItemActive {
-    transform: scale(1);
 }
 
 .carouselMedia {
@@ -535,12 +527,7 @@
     }
 
     .portfolioSection {
-        flex: none;
-        flex-shrink: 0;
-        height: 100svh;
-        overflow: hidden;
         padding: 0;
-        scroll-snap-align: start;
     }
 
     .layout {

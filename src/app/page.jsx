@@ -141,7 +141,7 @@ export default function Home() {
         const item = desktopItemRefs.current[idx];
         if (!el || !item) return;
         el.scrollTo({
-            top: item.offsetTop - (el.clientHeight - item.offsetHeight) / 2,
+            left: item.offsetLeft - (el.clientWidth - item.offsetWidth) / 2,
             behavior: smooth ? 'smooth' : 'auto',
         });
     }, []);
@@ -299,81 +299,74 @@ export default function Home() {
         return () => cancelAnimationFrame(id);
     }, [midStart, scrollToLoopItem]);
 
-    // Desktop carousel: detect active item + infinite loop recentering
+    // Desktop: constant scroll via RAF
     useEffect(() => {
         const el = carouselRef.current;
         if (!el) return;
+        let rafId;
+        let frameCount = 0;
 
-        const handleScroll = () => {
-            const center = el.scrollTop + el.clientHeight / 2;
-            let closestIdx = midStart;
-            let minDist = Infinity;
-            desktopItemRefs.current.forEach((item, i) => {
-                if (!item) return;
-                const dist = Math.abs((item.offsetTop + item.offsetHeight / 2) - center);
-                if (dist < minDist) { minDist = dist; closestIdx = i; }
-            });
+        const tick = () => {
+            if (window.innerWidth > 768 && !pausedRef.current) {
+                el.scrollLeft += 0.8;
+                frameCount++;
 
-            setActiveStep(((closestIdx % total) + total) % total);
-            desktopLoopIdxRef.current = closestIdx;
+                // Check recenter every 60 frames (~1s)
+                if (frameCount % 60 === 0) {
+                    frameCount = 0;
+                    const center = el.scrollLeft + el.clientWidth / 2;
+                    let closestIdx = desktopLoopIdxRef.current;
+                    let minDist = Infinity;
+                    desktopItemRefs.current.forEach((item, i) => {
+                        if (!item) return;
+                        const dist = Math.abs((item.offsetLeft + item.offsetWidth / 2) - center);
+                        if (dist < minDist) { minDist = dist; closestIdx = i; }
+                    });
+                    desktopLoopIdxRef.current = closestIdx;
 
-            // Silently recenter when near edges
-            if (closestIdx < total * 3 || closestIdx > LOOPED_PROJECTS.length - total * 3) {
-                const equivalent = midStart + (((closestIdx % total) + total) % total);
-                const target = desktopItemRefs.current[equivalent];
-                if (target) {
-                    el.style.scrollBehavior = 'auto';
-                    el.scrollTop = target.offsetTop - (el.clientHeight - target.offsetHeight) / 2;
-                    el.style.scrollBehavior = '';
-                    desktopLoopIdxRef.current = equivalent;
+                    if (closestIdx < total * 3 || closestIdx > LOOPED_PROJECTS.length - total * 3) {
+                        const equivalent = midStart + (((closestIdx % total) + total) % total);
+                        const target = desktopItemRefs.current[equivalent];
+                        const current = desktopItemRefs.current[closestIdx];
+                        if (target && current) {
+                            const sub = el.scrollLeft - (current.offsetLeft - (el.clientWidth - current.offsetWidth) / 2);
+                            el.scrollLeft = target.offsetLeft - (el.clientWidth - target.offsetWidth) / 2 + sub;
+                            desktopLoopIdxRef.current = equivalent;
+                        }
+                    }
                 }
             }
-
-            pausedRef.current = true;
-            clearTimeout(scrollTimeout.current);
-            scrollTimeout.current = setTimeout(() => { pausedRef.current = false; }, 2000);
+            rafId = requestAnimationFrame(tick);
         };
 
-        el.addEventListener('scroll', handleScroll, { passive: true });
-        return () => el.removeEventListener('scroll', handleScroll);
-    }, [total, midStart]);
-
-    // Auto-advance
-    useEffect(() => {
-        let interval;
-
-        const advance = () => {
-            if (pausedRef.current) return;
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile && scrollContainerRef.current) {
-                scrollContainerRef.current.scrollBy({ top: MOBILE_ITEM_HEIGHT, behavior: 'smooth' });
-            } else if (!isMobile) {
-                let nextIdx = desktopLoopIdxRef.current + 1;
-                if (nextIdx > LOOPED_PROJECTS.length - total * 3) {
-                    nextIdx = midStart + (nextIdx % total);
-                }
-                desktopLoopIdxRef.current = nextIdx;
-                setActiveStep(nextIdx % total);
-                scrollToLoopItem(nextIdx);
-            }
-        };
-
-        const start = () => { interval = setInterval(advance, 6000); };
-        const stop = () => clearInterval(interval);
-
-        // Restart interval fresh when tab regains focus to prevent accumulated callbacks
         const handleVisibility = () => {
-            if (document.hidden) { stop(); } else { stop(); start(); }
+            if (document.hidden) cancelAnimationFrame(rafId);
+            else rafId = requestAnimationFrame(tick);
         };
-
         document.addEventListener('visibilitychange', handleVisibility);
-        start();
+        rafId = requestAnimationFrame(tick);
 
         return () => {
-            stop();
+            cancelAnimationFrame(rafId);
             document.removeEventListener('visibilitychange', handleVisibility);
         };
-    }, [total, midStart, scrollToLoopItem]);
+    }, [total, midStart]);
+
+    // Mobile: step advance
+    useEffect(() => {
+        let interval;
+        const advance = () => {
+            if (!pausedRef.current && window.innerWidth <= 768) {
+                scrollContainerRef.current?.scrollBy({ top: MOBILE_ITEM_HEIGHT, behavior: 'smooth' });
+            }
+        };
+        const start = () => { interval = setInterval(advance, 6000); };
+        const stop = () => clearInterval(interval);
+        const handleVisibility = () => { if (document.hidden) stop(); else { stop(); start(); } };
+        document.addEventListener('visibilitychange', handleVisibility);
+        start();
+        return () => { stop(); document.removeEventListener('visibilitychange', handleVisibility); };
+    }, []);
 
     // ── Render ────────────────────────────────────────────────────────────────
     return (
@@ -518,16 +511,15 @@ export default function Home() {
                 <div
                     ref={carouselRef}
                     className={homeStyles.carouselTrack}
-                    onMouseEnter={pause}
-                    onMouseLeave={resume}
                 >
                     {LOOPED_PROJECTS.map((project, i) => {
-                        const realIdx = ((i % total) + total) % total;
                         return (
                         <div
                             key={`dc-${i}`}
                             ref={(el) => (desktopItemRefs.current[i] = el)}
-                            className={`${homeStyles.carouselItem} ${realIdx === activeStep ? homeStyles.carouselItemActive : ''}`}
+                            className={homeStyles.carouselItem}
+                            onMouseEnter={pause}
+                            onMouseLeave={resume}
                             onClick={() => { if (project.url) window.open(project.url, '_blank'); }}
                             style={{ cursor: project.url ? 'pointer' : 'default' }}
                         >
