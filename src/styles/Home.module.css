@@ -518,7 +518,7 @@
     display: grid;
     align-items: center;
     justify-items: center;
-    margin-top: 24px;
+    margin-top: 32px;
 }
 
 .mobilePreview > * {
@@ -536,9 +536,11 @@
 
     .portfolioSection {
         flex: none;
-        height: auto;
-        overflow: visible;
-        padding: 60px 0 120px;
+        flex-shrink: 0;
+        height: 100svh;
+        overflow: hidden;
+        padding: 0;
+        scroll-snap-align: start;
     }
 
     .layout {
@@ -547,14 +549,17 @@
 
     .mobileLayout {
         display: flex;
-        flex: 1;
-        min-height: 0;
+        height: 100%;
         flex-direction: column;
+        justify-content: center;
+        gap: 24px;
+        padding: 24px 0;
+        box-sizing: border-box;
     }
 
     .mobileScrollContainer {
-        flex: 1;
-        min-height: 0;
+        height: 180px;
+        flex: none;
     }
 
     .mobilePreview {

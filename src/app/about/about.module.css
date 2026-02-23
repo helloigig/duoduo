@@ -34,21 +34,25 @@
 }
 .aboutSection::-webkit-scrollbar { display: none; }
 
-/* Mobile: stack vertically */
+/* Mobile: two full-screen snapping sections */
 @media (max-width: 900px) {
     .combinedPage {
         flex-direction: column;
-        overflow-y: auto;
+        height: 100svh;
+        overflow-y: scroll;
         overflow-x: hidden;
+        scroll-snap-type: y mandatory;
     }
     .aboutSection {
         width: 100%;
         min-width: 0;
-        height: auto;
-        min-height: 100%;
-        overflow-y: visible;
+        height: 100svh;
+        min-height: unset;
+        flex-shrink: 0;
+        overflow-y: auto;
         border-right: none;
-        border-bottom: 1px solid #e5e5e5;
+        border-bottom: none;
+        scroll-snap-align: start;
     }
 }
 
