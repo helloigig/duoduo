@@ -44,7 +44,7 @@ function TitleDuoduo({ styles, onHoverChange }) {
     return (
         <span
             className={styles.titleDuoduo}
-            style={{ color: hovered ? '#FF2EDC' : undefined }}
+            style={{ color: '#FF2EDC' }}
             onMouseEnter={() => { setHovered(true); onHoverChange?.(true); }}
             onMouseLeave={() => { setHovered(false); onHoverChange?.(false); }}
         >
@@ -358,7 +358,7 @@ export default function Home() {
             }
         };
 
-        const start = () => { interval = setInterval(advance, 8000); };
+        const start = () => { interval = setInterval(advance, 6000); };
         const stop = () => clearInterval(interval);
 
         // Restart interval fresh when tab regains focus to prevent accumulated callbacks

@@ -113,8 +113,8 @@
 
 /* ── PAGE TITLE */
 .pageTitle {
-    font-family: playfair display;
-    font-size: clamp(24px, 4.5vw, 36px);
+    font-family: var(--font-instrument-serif), serif;
+    font-size: clamp(28px, 5vw, 42px);
     font-weight: 400;
     letter-spacing: -0.025em;
     line-height: 1.15;
@@ -203,8 +203,8 @@
     padding: 32px 36px;
 }
 .cardBackText {
-    font-family: 'playfair display', serif;
-    font-weight: 300;
+    font-family: var(--font-instrument-serif), serif;
+    font-weight: 400;
     text-align: left;
     line-height: 1.5;
     color: #0d0d0d;
@@ -212,9 +212,9 @@
     margin: 0;
 }
 .cardBackPlayfair {
-    font-family: 'playfair display', serif;
+    font-family: var(--font-instrument-serif), serif;
     font-style: italic;
-    font-weight: 600;
+    font-weight: 400;
 }
 .mainWrap { padding: 20px 24px 14px; }
 .fieldLabel {
@@ -438,7 +438,7 @@
 
 .userQuote {
     view-transition-name: user-brief;
-    font-family: playfair display;
+    font-family: var(--font-instrument-serif), serif;
     font-size: 20px;
     font-weight: 300;
     font-style: italic;
