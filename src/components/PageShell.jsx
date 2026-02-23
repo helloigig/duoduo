@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Lottie from 'lottie-react';
-import styles from '@/styles/Shell.module.css';
+import styles from '@/styles/PageShell.module.css';
 import Spring from '@/components/Spring';
 import callAnimation from '../../public/call.json';
 
