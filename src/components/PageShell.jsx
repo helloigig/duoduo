@@ -55,20 +55,22 @@ export default function PageShell({ children }) {
 
     return (
         <div className={styles.shell}>
-            <header className={styles.logoContainer}>
+            {/* Logo hidden on new design */}
+            {/* <header className={styles.logoContainer}>
                 <div className={styles.logoSpring}>
                     <Spring london={london} shenzhen={shenzhen} />
                 </div>
-            </header>
+            </header> */}
 
             <div className={styles.content}>
                 {children}
             </div>
 
-            {/* Book a call floating button */}
+            {/* Book a call floating button — hidden for now */}
             <button
                 type="button"
                 className={styles.calButton}
+                style={{ display: 'none' }}
                 onClick={() => setCalOpen(true)}
                 onMouseEnter={handleCallEnter}
                 onMouseLeave={handleCallLeave}
