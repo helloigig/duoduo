@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { CELL, FORM_COLS, FORM_ROWS } from '@/lib/grid';
+import { PROJECTS } from '@/lib/projects';
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const TICK_MS   = 160;
@@ -9,18 +10,6 @@ const SNAKE_LEN = 4;
 const SQ        = 1;    // project square = 1 grid cell
 const MIN_DIST  = 6;    // min cell distance between project squares
 const EDGE      = 2;    // cells clear from viewport edge
-
-// ── PROJECTS ──────────────────────────────────────────────────────────────────
-const PROJECTS = [
-    { id: 0, name: 'Dify',              tag: 'Website Design', subtitle: 'AI Platform',       preview: '/Dify.mp4',           isVideo: true,  color: '#818CF8' },
-    { id: 1, name: 'Galeta',            tag: 'Website Design', subtitle: 'Bakery',             preview: '/galeta.mp4',         isVideo: true,  color: '#F472B6' },
-    { id: 2, name: 'AnyApp',            tag: 'UI/UX Design',   subtitle: 'AI Widgets App',     preview: '/AnyApp.png',         isVideo: false, color: '#F59E0B' },
-    { id: 3, name: 'AI Platform',       tag: 'UI/UX Design',   subtitle: 'AI Dashboard',       preview: '/aiplatform.png',     isVideo: false, color: '#38BDF8' },
-    { id: 4, name: 'Bloc1',             tag: 'UI/UX Design',   subtitle: 'Climbing Gym App',   preview: '/Bloc1.png',          isVideo: false, color: '#F87171' },
-    { id: 5, name: 'Basecamp Research', tag: 'Website Design', subtitle: 'Research Institute', preview: '/BCR.mp4',            isVideo: true,  color: '#A78BFA' },
-    { id: 6, name: 'Kendall Common',    tag: 'Website Design', subtitle: 'Real Estate',        preview: '/kendall common.mp4', isVideo: true,  color: '#FBBF24' },
-    { id: 7, name: 'Cuto',              tag: 'Redesign',       subtitle: 'Wallpaper App',      preview: '/cuto.png',           isVideo: false, color: '#34D399' },
-];
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const OPP   = { r: 'l', l: 'r', u: 'd', d: 'u' };
@@ -176,7 +165,7 @@ function Lightbox({ project, onClose }) {
                 style={{
                     width: 'min(680px, 92vw)',
                     background: '#fff',
-                    border: `1.5px solid ${project.color}`,
+                    border: '1px solid #d8d8d8',
                     overflow: 'hidden',
                 }}
             >
@@ -196,7 +185,7 @@ function Lightbox({ project, onClose }) {
                 <div style={{
                     padding: '14px 20px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    borderTop: `1px solid ${project.color}`,
+                    borderTop: '1px solid #e8e8e8',
                 }}>
                     <div>
                         <div style={{
@@ -245,7 +234,7 @@ function PreviewCard({ project, onClose, onExpand, vw, vh }) {
                 position: 'fixed', top, left,
                 width: CARD_W,
                 background: '#fff',
-                border: `1px solid ${project.color}`,
+                border: '1px solid #d8d8d8',
                 cursor: 'pointer',
                 zIndex: 50,
                 animation: 'pcIn 0.16s ease',
@@ -269,7 +258,7 @@ function PreviewCard({ project, onClose, onExpand, vw, vh }) {
 
             <div style={{
                 padding: '8px 10px',
-                borderTop: `1px solid ${project.color}`,
+                borderTop: '1px solid #e8e8e8',
             }}>
                 <div style={{
                     fontFamily: 'var(--font-geist-sans),sans-serif',
@@ -574,11 +563,8 @@ export default function SnakeGame() {
                                 backgroundColor: p.color,
                                 cursor:          'default',
                                 pointerEvents:   'auto',
-                                outline:         snakeOn || isActive
-                                    ? `2px solid ${p.color}`
-                                    : 'none',
-                                outlineOffset:   '2px',
-                                transition:      'outline 0.1s',
+                                opacity:         isActive ? 0.6 : 1,
+                                transition:      'opacity 0.15s',
                             }}
                         />
                     );

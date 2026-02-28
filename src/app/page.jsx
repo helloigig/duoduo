@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { flushSync } from 'react-dom';
+import Link from 'next/link';
 import aboutStyles from '@/styles/about.module.css';
 import { SYS } from '@/lib/prompt';
 import SnakeGame from '@/components/SnakeGame';
@@ -221,6 +222,29 @@ export default function Home() {
             {/* ── BACKGROUND: snake game ── */}
             <SnakeGame />
 
+            {/* ── Work link ── */}
+            <Link
+                href="/work"
+                style={{
+                    position: 'fixed',
+                    top: 20,
+                    right: 24,
+                    zIndex: 50,
+                    fontFamily: 'var(--font-geist-sans), sans-serif',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: '#0d0d0d',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    textDecoration: 'none',
+                    background: '#fff',
+                    padding: '6px 12px',
+                    border: '1px solid #e5e5e5',
+                }}
+            >
+                Work →
+            </Link>
+
             {/* ── FOREGROUND: AI reception form ── */}
             <div style={{
                 position:       'absolute',
@@ -341,6 +365,19 @@ export default function Home() {
                 {/* Result */}
                 {result && (
                     <div className={aboutStyles.result} ref={resultRef} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+
+                        {/* Fax transmission header */}
+                        <div className={aboutStyles.faxHead}>
+                            <div className={aboutStyles.faxFrom}>
+                                DUODUO STUDIO<br />
+                                TRANSMISSION
+                            </div>
+                            <div className={aboutStyles.faxHeadRight}>
+                                DATE: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}<br />
+                                PAGES: 01 / 01
+                            </div>
+                        </div>
+
                         <div className={aboutStyles.reframe}>
                             <div className={aboutStyles.reframeEye}>What we hear</div>
                             <div className={aboutStyles.reframeBody}>{result.read}</div>
@@ -351,15 +388,15 @@ export default function Home() {
                         </div>
                         <div className={aboutStyles.meta}>
                             <div className={aboutStyles.metaItem}>
-                                <div className={aboutStyles.metaLbl}>Typical timeline</div>
-                                <div className={aboutStyles.metaVal}>{result.timeline}</div>
+                                <span className={aboutStyles.metaLbl}>Timeline</span>
+                                <span className={aboutStyles.metaVal}>{result.timeline}</span>
                             </div>
                             <div className={aboutStyles.metaItemWide}>
                                 <div className={aboutStyles.metaLblRow}>
-                                    <span className={aboutStyles.metaLbl}>Ballpark investment</span>
-                                    <span className={aboutStyles.metaTier}>{result.investment?.tier}</span>
+                                    <span className={aboutStyles.metaLbl}>Investment</span>
+                                    <span className={aboutStyles.metaVal}>{result.investment?.range}</span>
+                                    <span className={aboutStyles.metaTier}>[{result.investment?.tier}]</span>
                                 </div>
-                                <div className={aboutStyles.metaVal}>{result.investment?.range}</div>
                                 <div className={aboutStyles.metaReason}>{result.investment?.reason}</div>
                             </div>
                         </div>
@@ -373,7 +410,7 @@ export default function Home() {
                                 <span className={aboutStyles.ctaArr}>→</span>
                             </button>
                             <button className={aboutStyles.restart} onClick={restart}>
-                                Start over
+                                [ start over ]
                             </button>
                         </div>
                     </div>
