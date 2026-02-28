@@ -5,7 +5,7 @@ import { CELL, FORM_COLS, FORM_ROWS } from '@/lib/grid';
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const TICK_MS   = 160;
-const SNAKE_LEN = 8;
+const SNAKE_LEN = 4;
 const SQ        = 1;    // project square = 1 grid cell
 const MIN_DIST  = 6;    // min cell distance between project squares
 const EDGE      = 2;    // cells clear from viewport edge
@@ -75,37 +75,84 @@ function randomisePositions(cols, rows) {
     }));
 }
 
+/** Return the index of the project closest to head (Manhattan distance) */
+function nearestIdx(head, projects) {
+    let best = 0, bestDist = Infinity;
+    projects.forEach((p, i) => {
+        const dist = Math.abs(p.col - head.col) + Math.abs(p.row - head.row);
+        if (dist < bestDist) { bestDist = dist; best = i; }
+    });
+    return best;
+}
+
+/** Pick a new random grid position for a project, avoiding snake body, other projects, form zone, and edges */
+function randomNewPos(cols, rows, fz, snake, projects, excludeIdx) {
+    const buf = { c1: fz.c1 - 2, c2: fz.c2 + 2, r1: fz.r1 - 2, r2: fz.r2 + 2 };
+    const occupied = new Set();
+    snake.forEach(({ col, row }) => occupied.add(`${col},${row}`));
+    projects.forEach((p, i) => { if (i !== excludeIdx) occupied.add(`${p.col},${p.row}`); });
+
+    const candidates = [];
+    for (let c = EDGE; c < cols - EDGE; c++) {
+        for (let r = EDGE; r < rows - EDGE; r++) {
+            if (c >= buf.c1 && c < buf.c2 && r >= buf.r1 && r < buf.r2) continue;
+            if (occupied.has(`${c},${r}`)) continue;
+            candidates.push([c, r]);
+        }
+    }
+    if (candidates.length === 0) return null;
+    const [c, r] = candidates[Math.floor(Math.random() * candidates.length)];
+    return { col: c, row: r };
+}
+
 /**
  * Pick the best next direction toward target, avoiding the form zone.
  * Never reverses. Falls back to any valid direction if needed.
  */
-function bestDir(head, target, curDir, cols, rows, fz) {
+function bestDir(head, target, curDir, cols, rows, fz, snake) {
     const dx = target.col - head.col;
     const dy = target.row - head.row;
+    // Body cells the head must not enter (tail will vacate, so exclude it)
+    const body = new Set((snake ?? []).slice(0, -1).map(s => `${s.col},${s.row}`));
 
-    // Build candidate list ordered by alignment with target
+    function safe(d) {
+        if (d === OPP[curDir]) return false;
+        const [dc, dr] = DELTA[d];
+        const nc = ((head.col + dc) % cols + cols) % cols;
+        const nr = ((head.row + dr) % rows + rows) % rows;
+        return !inZone(nc, nr, fz) && !body.has(`${nc},${nr}`);
+    }
+
+    // Keep going straight when current direction is toward the target and the path is clear
+    const isTowardTarget =
+        (curDir === 'r' && dx > 0) || (curDir === 'l' && dx < 0) ||
+        (curDir === 'd' && dy > 0) || (curDir === 'u' && dy < 0);
+    if (isTowardTarget && safe(curDir)) return curDir;
+
+    // Build candidate order:
+    //   1. Toward target (largest gap first)
+    //   2. Perpendicular  (better than going backwards when blocked by form zone)
+    //   3. Everything else
     const preferred = [];
     if (dx !== 0) preferred.push([dx > 0 ? 'r' : 'l', Math.abs(dx)]);
     if (dy !== 0) preferred.push([dy > 0 ? 'd' : 'u', Math.abs(dy)]);
     preferred.sort((a, b) => b[1] - a[1]);
 
-    const all4 = ['r', 'l', 'u', 'd'];
-    const seen  = new Set();
-    const ordered = [
-        ...preferred.map(([d]) => d),
-        ...all4,
+    const prefDirs = preferred.map(([d]) => d);
+    const away     = prefDirs.map(d => OPP[d]);   // opposite of "toward" = "away"
+    const all4     = ['r', 'l', 'u', 'd'];
+    const seen     = new Set();
+    const ordered  = [
+        ...prefDirs,
+        ...all4.filter(d => !away.includes(d)),    // perp + preferred (deduped below)
+        ...all4,                                    // last resort includes away dirs
     ].filter(d => { if (seen.has(d)) return false; seen.add(d); return true; });
 
-    // First pass: prefer directions that avoid form zone
     for (const d of ordered) {
-        if (d === OPP[curDir]) continue;
-        const [dc, dr] = DELTA[d];
-        const nc = ((head.col + dc) % cols + cols) % cols;
-        const nr = ((head.row + dr) % rows + rows) % rows;
-        if (!inZone(nc, nr, fz)) return d;
+        if (safe(d)) return d;
     }
 
-    // Second pass: allow form zone if truly surrounded (edge case)
+    // Absolute last resort: allow form zone
     for (const d of ordered) {
         if (d !== OPP[curDir]) return d;
     }
@@ -250,11 +297,16 @@ export default function SnakeGame() {
     const gRef              = useRef(null);
     const pausedRef         = useRef(false);
     const previewRef        = useRef(null);  // mirror of preview state for use in callbacks
-    const autoCloseTimerRef = useRef(null);  // timeout id for auto-closing preview
-    const closePreviewRef   = useRef(null);  // stable ref to closePreview for use inside RAF
+    const autoCloseTimerRef = useRef(null);
+    const closePreviewRef   = useRef(null);  // stable ref so RAF loop can call closePreview
+    const manualRef         = useRef(false); // true while user is controlling the snake
+    const manualTimerRef    = useRef(null);  // timeout to revert to auto after 5 s
+    const nextDirRef        = useRef(null);  // queued direction from latest keypress
+    const postEatRef        = useRef(null);  // pending repositioning fn, run when preview closes
 
-    const [preview,  setPreview]  = useState(null);
-    const [lightbox, setLightbox] = useState(null);
+    const [preview,      setPreview]      = useState(null); // eating-triggered, pauses snake
+    const [hoverPreview, setHoverPreview] = useState(null); // hover-triggered, snake keeps moving
+    const [lightbox,     setLightbox]     = useState(null);
     const [computed, setComputed] = useState([]);
     const [viewport, setViewport] = useState({ w: 0, h: 0 });
     const [headCell, setHeadCell] = useState({ col: -1, row: -1 });
@@ -267,29 +319,13 @@ export default function SnakeGame() {
         previewRef.current = null;
         setPreview(null);
         pausedRef.current = false;
-        if (gRef.current) {
-            gRef.current.targetIdx =
-                (gRef.current.targetIdx + 1) % gRef.current.projects.length;
-        }
     }, []);
 
-    // Keep ref in sync so the RAF loop can call closePreview without closure issues
     closePreviewRef.current = closePreview;
 
-    // Toggle: first click opens, second click closes
-    const handleSquareClick = useCallback((id) => {
-        if (previewRef.current === id) {
-            closePreview();
-        } else {
-            previewRef.current = id;
-            setPreview(id);
-            pausedRef.current = true;
-            if (gRef.current) {
-                const idx = gRef.current.projects.findIndex(p => p.id === id);
-                if (idx !== -1) gRef.current.targetIdx = idx;
-            }
-        }
-    }, [closePreview]);
+    // Hover preview is fully independent — snake keeps moving, no timers
+    const handleSquareHover = useCallback((id) => setHoverPreview(id),  []);
+    const handleSquareLeave = useCallback(()    => setHoverPreview(null), []);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -315,7 +351,7 @@ export default function SnakeGame() {
                     col: startCol - i, row: startRow,
                 })),
                 dir: 'r',
-                targetIdx: 0,
+                targetIdx: nearestIdx({ col: startCol, row: startRow }, projects),
             };
 
             setViewport({ w: canvas.width, h: canvas.height });
@@ -342,21 +378,28 @@ export default function SnakeGame() {
                 ctx.setLineDash([]);
             }
 
-            // ── Snake — uniform light gray, fills full cell interior ──
+            // ── Snake body — uniform light gray ──
             ctx.fillStyle = '#BBBBBB';
             snake.forEach(({ col, row }) => {
                 ctx.fillRect(col * CELL + 1, row * CELL + 1, CELL - 1, CELL - 1);
             });
 
-            // ── Tiny dot on head indicating next target project ──
-            if (snake.length > 0 && tgt) {
-                const head = snake[0];
-                const cx = head.col * CELL + CELL / 2 + 0.5;
-                const cy = head.row * CELL + CELL / 2 + 0.5;
-                ctx.fillStyle = tgt.color;
-                ctx.beginPath();
-                ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-                ctx.fill();
+            // ── Head overlay ──
+            if (snake.length > 0) {
+                const h = snake[0];
+                if (manualRef.current) {
+                    // Manual mode: darker head as indicator
+                    ctx.fillStyle = '#444444';
+                    ctx.fillRect(h.col * CELL + 1, h.row * CELL + 1, CELL - 1, CELL - 1);
+                } else if (tgt) {
+                    // Auto mode: tiny colored dot pointing at current target
+                    const cx = h.col * CELL + CELL / 2 + 0.5;
+                    const cy = h.row * CELL + CELL / 2 + 0.5;
+                    ctx.fillStyle = tgt.color;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
@@ -377,40 +420,116 @@ export default function SnakeGame() {
             const head   = snake[0];
             const target = projects[g.targetIdx];
 
-            g.dir = bestDir(head, target, dir, cols, rows, fz);
+            if (manualRef.current) {
+                // Apply queued keypress if valid
+                const qd = nextDirRef.current;
+                if (qd && qd !== OPP[g.dir]) {
+                    nextDirRef.current = null;
+                    const [qdc, qdr] = DELTA[qd];
+                    const qnc = ((head.col + qdc) % cols + cols) % cols;
+                    const qnr = ((head.row + qdr) % rows + rows) % rows;
+                    const bodyHit = snake.slice(0, -1).some(s => s.col === qnc && s.row === qnr);
+                    if (!inZone(qnc, qnr, fz) && !bodyHit) g.dir = qd;
+                    // else: blocked — keep current direction
+                }
+                // Safety: if current direction would hit something, let auto steer us clear
+                const [cdc, cdr] = DELTA[g.dir];
+                const cnc = ((head.col + cdc) % cols + cols) % cols;
+                const cnr = ((head.row + cdr) % rows + rows) % rows;
+                const bodyAhead = snake.slice(0, -1).some(s => s.col === cnc && s.row === cnr);
+                if (inZone(cnc, cnr, fz) || bodyAhead) {
+                    g.dir = bestDir(head, target, g.dir, cols, rows, fz, snake);
+                }
+            } else {
+                g.dir = bestDir(head, target, dir, cols, rows, fz, snake);
+            }
 
             const [dc, dr] = DELTA[g.dir];
             const newHead  = {
                 col: ((head.col + dc) % cols + cols) % cols,
                 row: ((head.row + dr) % rows + rows) % rows,
             };
-            g.snake = [newHead, ...snake.slice(0, -1)];
+
+            // Check all projects for a hit — in manual mode the user can land on any square
+            const eatenIdx = projects.findIndex(p => p.col === newHead.col && p.row === newHead.row);
+            const eating   = eatenIdx !== -1;
+            const eaten    = eating ? projects[eatenIdx] : null;
+
+            // Grow on eat, otherwise slide (drop tail)
+            g.snake = eating ? [newHead, ...snake] : [newHead, ...snake.slice(0, -1)];
 
             setHeadCell({ col: newHead.col, row: newHead.row });
 
-            // When snake reaches target, open its preview then auto-close after 2 s
-            if (newHead.col === target.col && newHead.row === target.row) {
-                if (previewRef.current === null) {
-                    previewRef.current = target.id;
-                    setPreview(target.id);
-                    pausedRef.current = true;
-                    autoCloseTimerRef.current = setTimeout(
-                        () => closePreviewRef.current?.(),
-                        2000
-                    );
-                }
+            if (eating && previewRef.current === null) {
+                // Store repositioning so it can be triggered early by a keypress
+                postEatRef.current = () => {
+                    postEatRef.current = null;
+                    const g2 = gRef.current;
+                    if (!g2) return;
+                    const newPos = randomNewPos(g2.cols, g2.rows, g2.fz, g2.snake, g2.projects, eatenIdx);
+                    if (newPos) {
+                        g2.projects[eatenIdx] = { ...eaten, col: newPos.col, row: newPos.row };
+                        setComputed(prev => prev.map(p =>
+                            p.id === eaten.id
+                                ? { ...p, col: newPos.col, row: newPos.row, px: newPos.col * CELL, py: newPos.row * CELL }
+                                : p
+                        ));
+                    }
+                    g2.targetIdx = nearestIdx(g2.snake[0], g2.projects);
+                };
+
+                previewRef.current = eaten.id;
+                setPreview(eaten.id);
+                pausedRef.current = true;
+                autoCloseTimerRef.current = setTimeout(() => {
+                    closePreviewRef.current?.();
+                    postEatRef.current?.();
+                }, 3000);
             }
 
             drawFrame(g.snake, g.projects, g.targetIdx, g.fz);
         }
 
+        const KEY_MAP = {
+            ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r',
+            w: 'u', s: 'd', a: 'l', d: 'r',
+            W: 'u', S: 'd', A: 'l', D: 'r',
+        };
+        function handleKey(e) {
+            const d = KEY_MAP[e.key];
+            if (!d) return;
+            e.preventDefault();
+
+            if (pausedRef.current) {
+                // Any direction key dismisses the preview early
+                if (autoCloseTimerRef.current) {
+                    clearTimeout(autoCloseTimerRef.current);
+                    autoCloseTimerRef.current = null;
+                }
+                closePreviewRef.current?.();   // close preview, resume movement
+                postEatRef.current?.();         // run repositioning immediately if from eating
+            }
+
+            // Queue direction and enter / refresh manual mode
+            nextDirRef.current = d;
+            manualRef.current  = true;
+            if (manualTimerRef.current) clearTimeout(manualTimerRef.current);
+            manualTimerRef.current = setTimeout(() => {
+                manualRef.current      = false;
+                manualTimerRef.current = null;
+            }, 5000);
+        }
+
         init();
         window.addEventListener('resize', init);
+        window.addEventListener('keydown', handleKey);
         rafId = requestAnimationFrame(step);
 
         return () => {
             cancelAnimationFrame(rafId);
             window.removeEventListener('resize', init);
+            window.removeEventListener('keydown', handleKey);
+            if (manualTimerRef.current) clearTimeout(manualTimerRef.current);
         };
     }, []);
 
@@ -443,14 +562,8 @@ export default function SnakeGame() {
                     return (
                         <div
                             key={p.id}
-                            onClick={() => handleSquareClick(p.id)}
-                            onMouseEnter={() => {
-                                // Redirect snake toward this square on hover
-                                if (gRef.current && !pausedRef.current) {
-                                    const idx = gRef.current.projects.findIndex(q => q.id === p.id);
-                                    if (idx !== -1) gRef.current.targetIdx = idx;
-                                }
-                            }}
+                            onMouseEnter={() => handleSquareHover(p.id)}
+                            onMouseLeave={handleSquareLeave}
                             style={{
                                 position:        'absolute',
                                 // Fill the full cell interior — grid line acts as border
@@ -459,7 +572,7 @@ export default function SnakeGame() {
                                 width:           CELL - 1,
                                 height:          CELL - 1,
                                 backgroundColor: p.color,
-                                cursor:          'pointer',
+                                cursor:          'default',
                                 pointerEvents:   'auto',
                                 outline:         snakeOn || isActive
                                     ? `2px solid ${p.color}`
@@ -472,12 +585,23 @@ export default function SnakeGame() {
                 })}
             </div>
 
-            {/* Preview card */}
+            {/* Eating preview — pauses snake, auto-closes after 3 s */}
             {preview != null && byId[preview] && (
                 <PreviewCard
                     project={byId[preview]}
                     onClose={closePreview}
                     onExpand={() => setLightbox(preview)}
+                    vw={viewport.w}
+                    vh={viewport.h}
+                />
+            )}
+
+            {/* Hover preview — snake keeps moving, closes on mouse-leave */}
+            {hoverPreview != null && byId[hoverPreview] && (
+                <PreviewCard
+                    project={byId[hoverPreview]}
+                    onClose={handleSquareLeave}
+                    onExpand={() => setLightbox(hoverPreview)}
                     vw={viewport.w}
                     vh={viewport.h}
                 />
