@@ -95,58 +95,110 @@ function randomNewPos(cols, rows, fz, snake, projects, excludeIdx) {
 }
 
 /**
+ * BFS open-space count from (col, row), blocked by body + form zone.
+ * Capped at CAP to stay fast; returns how many free cells are reachable.
+ */
+function floodCount(col, row, cols, rows, fz, bodySet) {
+    const CAP     = 200;
+    const visited = new Set([`${col},${row}`]);
+    const queue   = [[col, row]];
+    while (queue.length > 0 && visited.size < CAP) {
+        const [c, r] = queue.shift();
+        for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const nc  = ((c + dc) % cols + cols) % cols;
+            const nr  = ((r + dr) % rows + rows) % rows;
+            const key = `${nc},${nr}`;
+            if (!visited.has(key) && !bodySet.has(key) && !inZone(nc, nr, fz)) {
+                visited.add(key);
+                queue.push([nc, nr]);
+            }
+        }
+    }
+    return visited.size;
+}
+
+/**
  * Pick the best next direction toward target, avoiding the form zone.
+ * Uses flood fill to avoid directions that lead into a dead end (coiling).
  * Never reverses. Falls back to any valid direction if needed.
  */
 function bestDir(head, target, curDir, cols, rows, fz, snake) {
-    const dx = target.col - head.col;
-    const dy = target.row - head.row;
+    const dx       = target.col - head.col;
+    const dy       = target.row - head.row;
     // Body cells the head must not enter (tail will vacate, so exclude it)
-    const body = new Set((snake ?? []).slice(0, -1).map(s => `${s.col},${s.row}`));
+    const body     = new Set((snake ?? []).slice(0, -1).map(s => `${s.col},${s.row}`));
+    const snakeLen = (snake ?? []).length;
+
+    function nextCell(d) {
+        const [dc, dr] = DELTA[d];
+        return {
+            col: ((head.col + dc) % cols + cols) % cols,
+            row: ((head.row + dr) % rows + rows) % rows,
+        };
+    }
 
     function safe(d) {
         if (d === OPP[curDir]) return false;
-        const [dc, dr] = DELTA[d];
-        const nc = ((head.col + dc) % cols + cols) % cols;
-        const nr = ((head.row + dr) % rows + rows) % rows;
+        const { col: nc, row: nr } = nextCell(d);
         return !inZone(nc, nr, fz) && !body.has(`${nc},${nr}`);
     }
 
-    // Keep going straight when current direction is toward the target and the path is clear
+    // Straight-line preference: keep going if already heading toward the target
+    // and the path ahead has adequate open space. This produces L-shaped paths
+    // instead of diagonal zigzags (which happen when the dominant axis is
+    // re-evaluated every tick).
     const isTowardTarget =
         (curDir === 'r' && dx > 0) || (curDir === 'l' && dx < 0) ||
         (curDir === 'd' && dy > 0) || (curDir === 'u' && dy < 0);
-    if (isTowardTarget && safe(curDir)) return curDir;
+    if (isTowardTarget && safe(curDir)) {
+        const { col: nc, row: nr } = nextCell(curDir);
+        if (floodCount(nc, nr, cols, rows, fz, body) >= snakeLen) return curDir;
+    }
 
     // Build candidate order:
     //   1. Toward target (largest gap first)
-    //   2. Perpendicular  (better than going backwards when blocked by form zone)
-    //   3. Everything else
+    //   2. Perpendicular
+    //   3. Everything else (including away)
     const preferred = [];
     if (dx !== 0) preferred.push([dx > 0 ? 'r' : 'l', Math.abs(dx)]);
     if (dy !== 0) preferred.push([dy > 0 ? 'd' : 'u', Math.abs(dy)]);
     preferred.sort((a, b) => b[1] - a[1]);
 
     const prefDirs = preferred.map(([d]) => d);
-    const away     = prefDirs.map(d => OPP[d]);   // opposite of "toward" = "away"
+    const away     = prefDirs.map(d => OPP[d]);
     const all4     = ['r', 'l', 'u', 'd'];
     const seen     = new Set();
     const ordered  = [
         ...prefDirs,
-        ...all4.filter(d => !away.includes(d)),    // perp + preferred (deduped below)
-        ...all4,                                    // last resort includes away dirs
+        ...all4.filter(d => !away.includes(d)),
+        ...all4,
     ].filter(d => { if (seen.has(d)) return false; seen.add(d); return true; });
 
-    for (const d of ordered) {
-        if (safe(d)) return d;
+    const safeDirs = ordered.filter(d => safe(d));
+
+    if (safeDirs.length === 0) {
+        // Absolute last resort: allow form zone, but not reversal
+        for (const d of ordered) {
+            if (d !== OPP[curDir]) return d;
+        }
+        return curDir;
     }
 
-    // Absolute last resort: allow form zone
-    for (const d of ordered) {
-        if (d !== OPP[curDir]) return d;
-    }
+    // Score each safe direction by open space after moving there.
+    // This prevents the snake from greedily entering a dead end and coiling.
+    const scored = safeDirs.map(d => {
+        const { col: nc, row: nr } = nextCell(d);
+        return { d, space: floodCount(nc, nr, cols, rows, fz, body) };
+    });
 
-    return curDir;
+    // Prefer directions with enough room (>= snake length).
+    // Among those, return the first in preferred order (toward target).
+    const adequate = scored.filter(s => s.space >= snakeLen);
+    if (adequate.length > 0) return adequate[0].d;
+
+    // All paths are tight — pick the roomiest to maximise survival
+    scored.sort((a, b) => b.space - a.space);
+    return scored[0].d;
 }
 
 // ── LIGHTBOX ──────────────────────────────────────────────────────────────────
