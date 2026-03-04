@@ -1,0 +1,239 @@
+.page {
+    min-height: 100vh;
+    background: #fff;
+    font-family: var(--font-geist-sans), sans-serif;
+}
+
+/* ── Header ── */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 52px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.logo {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0d0d0d;
+    text-decoration: none;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.logoArrow {
+    font-size: 13px;
+    font-weight: 400;
+    color: #aaa;
+    letter-spacing: 0;
+}
+
+.headerRight {
+    font-size: 12px;
+    color: #aaa;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ── Grid ── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-left: 1px solid #e5e5e5;
+}
+
+.cell {
+    border-right: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+}
+
+/* ── Media ── */
+.mediaWrap {
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    background: #f0f0f0;
+}
+
+.media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── Hover footer — slides up from below on hover ── */
+.footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 16px;
+    background: #fff;
+    border-top: 1px solid #e5e5e5;
+    transform: translateY(100%);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cell:hover .footer {
+    transform: translateY(0);
+}
+
+/* Project icon — small rounded square, mirrors the snake game color squares */
+.footerIcon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* If a logo image is used inside the icon */
+.footerIcon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.footerName {
+    font-size: 13px;
+    font-weight: 500;
+    color: #0d0d0d;
+    letter-spacing: -0.02em;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.footerTag {
+    font-size: 11px;
+    color: #aaa;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ── Lightbox ── */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.lightbox {
+    width: min(760px, 92vw);
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    border: 1px solid #e5e5e5;
+}
+
+.lightboxMedia {
+    width: 100%;
+    max-height: 540px;
+    object-fit: cover;
+    display: block;
+    flex: 1;
+    min-height: 0;
+}
+
+.lightboxFooter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 1px solid #e5e5e5;
+    flex-shrink: 0;
+    gap: 12px;
+}
+
+.lightboxInfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.lightboxIcon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.lightboxIcon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.lightboxText {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.lightboxName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0d0d0d;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lightboxMeta {
+    font-size: 11px;
+    color: #999;
+}
+
+.lightboxClose {
+    background: none;
+    border: 1px solid #e5e5e5;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: #888;
+    font-family: inherit;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.lightboxClose:hover {
+    border-color: #0d0d0d;
+    color: #0d0d0d;
+}

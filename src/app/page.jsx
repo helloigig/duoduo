@@ -2,9 +2,11 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { flushSync } from 'react-dom';
+import Link from 'next/link';
 import aboutStyles from '@/styles/about.module.css';
-import homeStyles from '@/styles/home.module.css';
 import { SYS } from '@/lib/prompt';
+import SnakeGame from '@/components/SnakeGame';
+import { CELL, FORM_COLS } from '@/lib/grid';
 
 // ── AVATAR ANIMATION COMPONENT ────────────────────────────────────────────────
 const HAIR_D = "M34.4919 43.7134C32.6776 47.016 27.7524 57.9013 26.6679 63.3257C26.5839 63.7459 27.8517 62.9688 31.8706 58.4333C35.8894 53.8977 43.0341 45.4914 46.7936 41.4394C50.5531 37.3874 50.7109 37.9445 51.8697 44.2038C53.0285 50.4631 55.1837 62.4077 56.5698 68.2805C57.956 74.1534 58.5079 73.5926 58.9026 73.0088C59.6448 71.9111 61.5177 63.0074 64.5056 50.6634C65.5171 46.485 66.3276 46.7621 68.5281 51.549C74.9371 65.4906 78.9302 74.8187 79.868 73.1751C80.2725 72.022 80.5318 70.221 80.9261 66.6929C81.3204 63.165 81.8419 57.9649 82.3792 52.607L82.3794 52.6057M82.5905 44.4677C82.6446 44.304 82.6987 44.1403 82.9392 44.3089C83.1796 44.4776 83.6049 44.9836 86.4925 50.0756C89.38 55.1677 94.717 64.8305 97.6364 69.2056C100.556 73.5807 100.896 72.3754 101.024 68.4973C101.369 58.1107 101.229 49.7095 101.965 47.1415C102.241 46.179 103.1 46.224 104.433 47.5636C105.766 48.9033 107.746 51.617 111.01 56.6314C118.917 68.7789 124.169 77.3463 125.353 78.4185C129.395 82.0775 122.778 60.7137 122.717 55.5016C122.706 54.588 130.99 63.3757 141.324 74.7754C144.701 78.5006 145.017 77.3487 144.357 72.5161C142.509 58.9878 141.277 49.8663 142.876 50.2149C146.109 50.9194 151.233 58.1509 157.894 65.2331C162.721 70.3654 165.87 71.4928 166.97 71.4786C170.598 71.4316 166.895 60.3063 161.691 49.8817C159.757 46.0062 155.514 41.6757 151.506 37.4454C143.674 29.1798 138.508 25.4296 137.468 24.7984C136.393 24.1464 131.843 21.6179 123.335 17.6549C118.956 15.6149 114.144 14.2097 108.229 12.9153C102.313 11.6208 95.3612 10.657 88.0026 10.2394C80.6441 9.82174 73.0897 9.97954 66.2359 10.4887C59.382 10.9978 53.4575 11.8535 48.1626 12.9903C38.2853 15.1109 32.4059 17.6698 28.7186 19.9494C18.3231 26.3764 14.3622 32.3812 11.8213 36.7429C9.4111 40.8801 11.2376 47.2717 12.5039 51.1684C15.0736 57.2807 16.847 60.784 18.1288 62.4784C18.7143 63.1875 19.1676 63.5905 20.3577 64.5759";
@@ -14,7 +16,7 @@ const MOUTH1_D = "M98.7001 128.108C96.9365 127.264 93.3827 126.214 84.7174 125.9
 const MOUTH2_D = "M86.4883 167.051C86.4883 167.274 86.8902 167.955 87.8579 168.974C90.0777 171.311 102.78 170.885 111.822 170.5C118.565 170.213 125.534 167.503 128.767 166.477C131.702 165.545 133.7 163.184 134.779 160.451C134.908 158.896 134.646 157.152 134.07 155.456C133.756 154.682 133.4 154.084 132.688 152.95";
 
 function AvatarAni({ paused = false, className, style: styleProp }) {
-    const ps = paused ? 'paused' : 'running';
+    const ps   = paused ? 'paused' : 'running';
     const base = { transformOrigin: 'center', transformBox: 'fill-box' };
     const hair  = { ...base, animation: 'ava-hair  2s infinite ease-in-out', animationPlayState: ps };
     const eye   = { ...base, animation: 'ava-eyes  2s infinite ease-in-out', animationPlayState: ps };
@@ -39,12 +41,11 @@ function AvatarAni({ paused = false, className, style: styleProp }) {
     );
 }
 
-function TitleDuoduo({ styles, onHoverChange }) {
+function TitleDuoduo({ onHoverChange }) {
     const [hovered, setHovered] = useState(false);
     return (
         <span
-            className={styles.titleDuoduo}
-            style={{ color: '#FF2EDC' }}
+            style={{ color: '#FF2EDC', display: 'inline', cursor: 'default' }}
             onMouseEnter={() => { setHovered(true); onHoverChange?.(true); }}
             onMouseLeave={() => { setHovered(false); onHoverChange?.(false); }}
         >
@@ -52,114 +53,83 @@ function TitleDuoduo({ styles, onHoverChange }) {
             {' '}
             <AvatarAni
                 paused
-                className={styles.titleAvatar}
-                style={{ transform: hovered ? 'rotate(10deg)' : 'rotate(0deg)' }}
+                style={{
+                    display: 'inline-block',
+                    height: '1em', width: '1em',
+                    verticalAlign: 'middle',
+                    margin: '0 2px',
+                    position: 'relative',
+                    top: '-0.05em',
+                    transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transform: hovered ? 'rotate(10deg)' : 'rotate(0deg)',
+                    viewTransitionName: 'duoduo-avatar',
+                }}
             />
         </span>
     );
 }
 
-// ── PROJECT DATA ──────────────────────────────────────────────────────────────
-
-const LEFT_PROJECTS = [
-    { name: 'Dify', tag: 'Website Design', subtitle: 'AI Platform', preview: '/Dify.mp4', isVideo: true, url: 'https://dify.ai' },
-    { name: 'AnyApp', tag: 'UI/UX Design', subtitle: 'AI Widgets App', preview: '/AnyApp.png' },
-    { name: 'AI Platform', tag: 'UI/UX Design', subtitle: 'AI Dashboard', preview: '/aiplatform.png' },
-    { name: 'Cuto', tag: 'Redesign', subtitle: 'Wallpaper App', preview: '/cuto.png', url: 'https://apps.apple.com/us/app/cuto-wallpaper/id1068086465' },
-];
-
-const RIGHT_PROJECTS = [
-    { name: 'Bloc1', tag: 'UI/UX Design', subtitle: 'Climbing Gym App', preview: '/Bloc1.png' },
-    { name: 'Kendall Common', tag: 'Website Design', subtitle: 'Real Estate', preview: '/kendall common.mp4', isVideo: true, url: 'https://kendallcommon.com' },
-    { name: 'Galeta', tag: 'Website Design', subtitle: 'Bakery', preview: '/galeta.mp4', isVideo: true, url: 'https://galeta.co.uk' },
-    { name: 'Basecamp Research', tag: 'Website Design', subtitle: 'Research Institute', preview: '/BCR.mp4', isVideo: true, url: 'https://basecamp-research.com' },
-];
-
-const ALL_PROJECTS = [...LEFT_PROJECTS, ...RIGHT_PROJECTS];
-const MOBILE_ITEM_HEIGHT = 52;
-const LOOP_COUNT = 20;
-const LOOPED_PROJECTS = Array.from({ length: LOOP_COUNT }, () => ALL_PROJECTS).flat();
-
+// ── LOADING MESSAGES ───────────────────────────────────────────────────────────
 const LOADING_MSGS = [
     'Decoding the vibe...',
-  'Logic in progress...',
-  'Un-complicating it...',
-  'Polishing the soul...',
-  'Translating your intent...',
-  'Mapping the friction...',
-  'Filtering the noise...',
-  'Extracting the core...',
-  'Sculpting the flow...',
-  'Weighting the pixels...',
-  'Sensing the rhythm...',
-  'Aligning the intuition...',
-  'Tracing the spark...',
-  'Structuring the silence...',
-  'Decompressing the brief...',
-  'Designing the invisible...',
-  'Syncing the logic...',
-  'Refining the pulse...',
-  'Drafting the essence...',
-  'Almost there, stay cool.'
+    'Logic in progress...',
+    'Un-complicating it...',
+    'Polishing the soul...',
+    'Translating your intent...',
+    'Mapping the friction...',
+    'Filtering the noise...',
+    'Extracting the core...',
+    'Sculpting the flow...',
+    'Weighting the pixels...',
+    'Sensing the rhythm...',
+    'Aligning the intuition...',
+    'Tracing the spark...',
+    'Structuring the silence...',
+    'Decompressing the brief...',
+    'Designing the invisible...',
+    'Syncing the logic...',
+    'Refining the pulse...',
+    'Drafting the essence...',
+    'Almost there, stay cool.',
 ];
 
 // ── COMBINED PAGE ─────────────────────────────────────────────────────────────
 export default function Home() {
-    // About state
-    const [titleHovered, setTitleHovered] = useState(false);
-    const [mainInput, setMainInput] = useState('');
-    const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-    const [submittedText, setSubmittedText] = useState('');
-    const [history, setHistory] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [followup, setFollowup] = useState(null);
-    const [followupInput, setFollowupInput] = useState('');
-    const [result, setResult] = useState(null);
-    const [error, setError] = useState('');
-    const [ctaVisible, setCtaVisible] = useState(false);
+    const [titleHovered,   setTitleHovered]   = useState(false);
+    const [mainInput,      setMainInput]      = useState('');
+    const [loadingMsgIdx,  setLoadingMsgIdx]  = useState(0);
+    const [submittedText,  setSubmittedText]  = useState('');
+    const [history,        setHistory]        = useState([]);
+    const [loading,        setLoading]        = useState(false);
+    const [followup,       setFollowup]       = useState(null);
+    const [followupInput,  setFollowupInput]  = useState('');
+    const [result,         setResult]         = useState(null);
+    const [error,          setError]          = useState('');
+    const [ctaVisible,     setCtaVisible]     = useState(false);
     const resultRef = useRef(null);
-    const pageRef = useRef(null);
     const canSubmit = mainInput.trim().length >= 8 && !loading;
 
-    // Portfolio state
-    const total = ALL_PROJECTS.length;
-    const [activeStep, setActiveStep] = useState(0);
-    const pausedRef = useRef(false);
-    const scrollContainerRef = useRef(null);
-    const isRecentering = useRef(false);
-    const scrollTimeout = useRef(null);
-    const carouselRef = useRef(null);
-    const desktopItemRefs = useRef([]);
-    const desktopLoopIdxRef = useRef(0);
-    const mobilePreviewRef = useRef(null);
-    const activeStepRef = useRef(activeStep);
-    activeStepRef.current = activeStep;
-    const midStart = Math.floor(LOOP_COUNT / 2) * total;
+    // Nudge form horizontally so its edges land on grid lines
+    const FORM_W = FORM_COLS * CELL; // 560 px
+    const [formOffset, setFormOffset] = useState(0);
+    useEffect(() => {
+        const snap = () => {
+            const naturalLeft = (window.innerWidth - FORM_W) / 2;
+            const col = Math.round(naturalLeft / CELL);
+            setFormOffset(col * CELL - naturalLeft);
+        };
+        snap();
+        window.addEventListener('resize', snap);
+        return () => window.removeEventListener('resize', snap);
+    }, [FORM_W]);
 
-    const scrollToLoopItem = useCallback((idx, smooth = true) => {
-        const el = carouselRef.current;
-        const item = desktopItemRefs.current[idx];
-        if (!el || !item) return;
-        el.scrollTo({
-            left: item.offsetLeft - (el.clientWidth - item.offsetWidth) / 2,
-            behavior: smooth ? 'smooth' : 'auto',
-        });
-    }, []);
-
-    const pause = useCallback(() => { pausedRef.current = true; }, []);
-    const resume = useCallback(() => { pausedRef.current = false; }, []);
-
-    // ── About handlers ────────────────────────────────────────────────────────
-    const handleMainKeyDown = (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleSubmit();
-    };
-
+    // ── API ────────────────────────────────────────────────────────────────────
     const callAPI = useCallback(async (msgs) => {
         try {
-            const res = await fetch('/api/brief', {
-                method: 'POST',
+            const res  = await fetch('/api/brief', {
+                method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: msgs, system: SYS }),
+                body:    JSON.stringify({ messages: msgs, system: SYS }),
             });
             const data = await res.json();
             if (data.error) { setLoading(false); setError(data.error); return; }
@@ -184,10 +154,14 @@ export default function Home() {
         }
     }, []);
 
+    const handleMainKeyDown = (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleSubmit();
+    };
+
     const handleSubmit = useCallback(async () => {
         if (!canSubmit) return;
         const trimmed = mainInput.trim();
-        const msgs = [{ role: 'user', content: trimmed }];
+        const msgs    = [{ role: 'user', content: trimmed }];
         setHistory(msgs);
 
         const applyLoadingState = () => {
@@ -201,11 +175,8 @@ export default function Home() {
             });
         };
 
-        if (document.startViewTransition) {
-            document.startViewTransition(applyLoadingState);
-        } else {
-            applyLoadingState();
-        }
+        if (document.startViewTransition) document.startViewTransition(applyLoadingState);
+        else applyLoadingState();
 
         await callAPI(msgs);
     }, [canSubmit, mainInput, callAPI]);
@@ -215,7 +186,7 @@ export default function Home() {
         const msgs = [
             ...history,
             { role: 'assistant', content: followup.question },
-            { role: 'user', content: followupInput.trim() },
+            { role: 'user',      content: followupInput.trim() },
         ];
         setHistory(msgs);
         setFollowup(null);
@@ -244,380 +215,208 @@ export default function Home() {
         return () => clearInterval(id);
     }, [loading]);
 
-    // ── Scroll-to-top event (triggered by avatar click in PageShell) ──────────
-    useEffect(() => {
-        const handler = () => pageRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-        window.addEventListener('scroll-to-top', handler);
-        return () => window.removeEventListener('scroll-to-top', handler);
-    }, []);
-
-    // ── Portfolio effects ─────────────────────────────────────────────────────
-
-    // Mobile: init scroll position
-    useEffect(() => {
-        const el = scrollContainerRef.current;
-        if (el) el.scrollTop = midStart * MOBILE_ITEM_HEIGHT;
-    }, [midStart]);
-
-    // Mobile: detect active item on scroll + infinite loop recenter
-    useEffect(() => {
-        const el = scrollContainerRef.current;
-        if (!el) return;
-        const lowerBound = total * 3 * MOBILE_ITEM_HEIGHT;
-        const upperBound = total * (LOOP_COUNT - 3) * MOBILE_ITEM_HEIGHT;
-
-        const handleScroll = () => {
-            if (isRecentering.current) return;
-            const containerCenter = el.scrollTop + el.clientHeight / 2;
-            const idx = Math.floor(containerCenter / MOBILE_ITEM_HEIGHT);
-            const realIdx = ((idx % total) + total) % total;
-            setActiveStep(realIdx);
-            if (el.scrollTop < lowerBound || el.scrollTop > upperBound) {
-                isRecentering.current = true;
-                const currentIdx = Math.round(el.scrollTop / MOBILE_ITEM_HEIGHT);
-                const equivalent = (currentIdx % total) + midStart;
-                el.style.scrollBehavior = 'auto';
-                el.scrollTop = equivalent * MOBILE_ITEM_HEIGHT;
-                el.style.scrollBehavior = '';
-                requestAnimationFrame(() => { isRecentering.current = false; });
-            }
-            pausedRef.current = true;
-            clearTimeout(scrollTimeout.current);
-            scrollTimeout.current = setTimeout(() => { pausedRef.current = false; }, 2000);
-        };
-
-        el.addEventListener('scroll', handleScroll, { passive: true });
-        return () => el.removeEventListener('scroll', handleScroll);
-    }, [total, midStart]);
-
-    // Desktop carousel: init scroll to middle of looped list
-    useEffect(() => {
-        const id = requestAnimationFrame(() => {
-            desktopLoopIdxRef.current = midStart;
-            scrollToLoopItem(midStart, false);
-        });
-        return () => cancelAnimationFrame(id);
-    }, [midStart, scrollToLoopItem]);
-
-    // Desktop: constant scroll via RAF
-    useEffect(() => {
-        const el = carouselRef.current;
-        if (!el) return;
-        let rafId;
-        let frameCount = 0;
-
-        const tick = () => {
-            if (window.innerWidth > 768 && !pausedRef.current) {
-                el.scrollLeft += 0.8;
-                frameCount++;
-
-                // Check recenter every 60 frames (~1s)
-                if (frameCount % 60 === 0) {
-                    frameCount = 0;
-                    const center = el.scrollLeft + el.clientWidth / 2;
-                    let closestIdx = desktopLoopIdxRef.current;
-                    let minDist = Infinity;
-                    desktopItemRefs.current.forEach((item, i) => {
-                        if (!item) return;
-                        const dist = Math.abs((item.offsetLeft + item.offsetWidth / 2) - center);
-                        if (dist < minDist) { minDist = dist; closestIdx = i; }
-                    });
-                    desktopLoopIdxRef.current = closestIdx;
-
-                    if (closestIdx < total * 3 || closestIdx > LOOPED_PROJECTS.length - total * 3) {
-                        const equivalent = midStart + (((closestIdx % total) + total) % total);
-                        const target = desktopItemRefs.current[equivalent];
-                        const current = desktopItemRefs.current[closestIdx];
-                        if (target && current) {
-                            const sub = el.scrollLeft - (current.offsetLeft - (el.clientWidth - current.offsetWidth) / 2);
-                            el.scrollLeft = target.offsetLeft - (el.clientWidth - target.offsetWidth) / 2 + sub;
-                            desktopLoopIdxRef.current = equivalent;
-                        }
-                    }
-                }
-            }
-            rafId = requestAnimationFrame(tick);
-        };
-
-        const handleVisibility = () => {
-            if (document.hidden) cancelAnimationFrame(rafId);
-            else rafId = requestAnimationFrame(tick);
-        };
-        document.addEventListener('visibilitychange', handleVisibility);
-        rafId = requestAnimationFrame(tick);
-
-        return () => {
-            cancelAnimationFrame(rafId);
-            document.removeEventListener('visibilitychange', handleVisibility);
-        };
-    }, [total, midStart]);
-
-    // Mobile: step advance
-    useEffect(() => {
-        let interval;
-        const advance = () => {
-            if (!pausedRef.current && window.innerWidth <= 768) {
-                scrollContainerRef.current?.scrollBy({ top: MOBILE_ITEM_HEIGHT, behavior: 'smooth' });
-            }
-        };
-        const start = () => { interval = setInterval(advance, 6000); };
-        const stop = () => clearInterval(interval);
-        const handleVisibility = () => { if (document.hidden) stop(); else { stop(); start(); } };
-        document.addEventListener('visibilitychange', handleVisibility);
-        start();
-        return () => { stop(); document.removeEventListener('visibilitychange', handleVisibility); };
-    }, []);
-
-    // ── Render ────────────────────────────────────────────────────────────────
+    // ── RENDER ────────────────────────────────────────────────────────────────
     return (
-        <div className={aboutStyles.combinedPage} ref={pageRef}>
+        <div style={{ position: 'relative', width: '100vw', height: '100svh', overflow: 'hidden', background: '#F2F2F2' }}>
 
-            {/* ── ABOUT SECTION ── */}
-            <div className={aboutStyles.aboutSection}>
-                <div className={aboutStyles.inner}>
+            {/* ── BACKGROUND: snake game ── */}
+            <SnakeGame />
 
-                    {/* Form — hidden after submit */}
-                    {!result && !loading && !followup && (
-                        <div className={aboutStyles.formSectionCentered}>
-                            <h1 className={aboutStyles.pageTitle}>
-                                How could <TitleDuoduo styles={aboutStyles} onHoverChange={setTitleHovered} /> help you?
-                            </h1>
-                            <div className={aboutStyles.inputCardFlip}>
-                            <div className={`${aboutStyles.inputCardInner} ${titleHovered ? aboutStyles.inputCardFlipped : ''}`}>
-                            <div className={`${aboutStyles.inputCard} ${aboutStyles.inputCardFront}`}>
-                                <div className={aboutStyles.mainWrap}>
-                                    <label className={aboutStyles.fieldLabel}>WHAT’S BREWING?</label>
-                                    <textarea
-                                        className={aboutStyles.mainTextarea}
-                                        rows={5}
-                                        value={mainInput}
-                                        onChange={(e) => setMainInput(e.target.value)}
-                                        onKeyDown={handleMainKeyDown}
-                                        placeholder="Tell us the what, why, and for whom. We’ll solve the how."
-                                    />
-                                </div>
-                                <div className={aboutStyles.cardFoot}>
-                                    <span className={aboutStyles.footHint}>⌘↩ to send</span>
-                                    <button className={aboutStyles.submitBtn} onClick={handleSubmit} disabled={!canSubmit}>
-                                        {loading && <span className={aboutStyles.spinner} />}
-                                        <span>{loading ? 'Reading…' : 'Send'}</span>
-                                    </button>
-                                </div>
-                            </div>{/* inputCardFront */}
-                            <div className={aboutStyles.inputCardBack}>
-                                <p className={aboutStyles.cardBackText}>
-                                    Duoduo is a product design studio founded by <span className={aboutStyles.cardBackPlayfair}>Gigi & Kiwi</span>.<br />
-                                    Operating between <span className={aboutStyles.cardBackPlayfair}>London and Shenzhen</span>.<br />
-                                    We help people turn ideas into tangible products.<br />
-                                    Aligning vision, experience, and production from day one.
-                                </p>
-                            </div>
-                            </div>{/* inputCardInner */}
-                            </div>{/* inputCardFlip */}
-                            {error && <div className={aboutStyles.error}>{error}</div>}
-                        </div>
-                    )}
+            {/* ── Work link ── */}
+            <Link
+                href="/work"
+                style={{
+                    position: 'fixed',
+                    top: 20,
+                    right: 24,
+                    zIndex: 50,
+                    fontFamily: 'var(--font-geist-sans), sans-serif',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: '#0d0d0d',
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    textDecoration: 'none',
+                    background: '#fff',
+                    padding: '6px 12px',
+                    border: '1px solid #e5e5e5',
+                }}
+            >
+                Work →
+            </Link>
 
-                    {/* Quote + loading centered during thinking */}
-                    {loading && submittedText && (
-                        <div className={aboutStyles.loadingCentered}>
-                            <blockquote className={aboutStyles.userQuote}>{submittedText}</blockquote>
-                            <div className={aboutStyles.loading}>
-                                <AvatarAni className={aboutStyles.loadingAvatar} />
-                                <div
-                                    key={loadingMsgIdx}
-                                    className={aboutStyles.loadingMsg}
-                                >
-                                    {LOADING_MSGS[loadingMsgIdx % LOADING_MSGS.length]}
-                                </div>
-                            </div>
-                        </div>
-                    )}
+            {/* ── FOREGROUND: AI reception form ── */}
+            <div style={{
+                position:       'absolute',
+                inset:          0,
+                zIndex:         10,
+                overflowY:      'auto',
+                overflowX:      'hidden',
+                display:        'flex',
+                flexDirection:  'column',
+                alignItems:     'center',
+                justifyContent: result || loading ? 'flex-start' : 'center',
+                padding:        result || loading ? '80px 24px 120px' : '0 24px',
+                scrollbarWidth: 'none',
+            }}>
 
-                    {/* Quote at top — once result or follow-up is ready */}
-                    {(result || followup) && submittedText && (
-                        <div className={aboutStyles.submittedTop}>
-                            <blockquote className={aboutStyles.userQuote}>{submittedText}</blockquote>
-                        </div>
-                    )}
-
-                    {/* Follow-up */}
-                    {followup && (
-                        <div className={aboutStyles.followup}>
-                            <div className={aboutStyles.fqHead}>
-                                <div className={aboutStyles.fqEye}>One question</div>
-                                <div className={aboutStyles.fqQ}>{followup.question}</div>
-                            </div>
-                            <div className={aboutStyles.fqBody}>
-                                <textarea
-                                    className={aboutStyles.fqTextarea}
-                                    value={followupInput}
-                                    onChange={(e) => setFollowupInput(e.target.value)}
-                                    placeholder="Your answer…"
-                                    rows={2}
-                                    autoFocus
-                                />
-                                <button className={aboutStyles.fqBtn} onClick={handleFollowup}>Continue →</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Result */}
-                    {result && (
-                        <div className={aboutStyles.result} ref={resultRef}>
-                            <div className={aboutStyles.reframe}>
-                                <div className={aboutStyles.reframeEye}>What we hear</div>
-                                <div className={aboutStyles.reframeBody}>{result.read}</div>
-                            </div>
-                            <div className={aboutStyles.approachCard}>
-                                <div className={aboutStyles.approachEye}>How we'd approach this</div>
-                                <div className={aboutStyles.approachBody}>{result.approach}</div>
-                            </div>
-                            <div className={aboutStyles.meta}>
-                                <div className={aboutStyles.metaItem}>
-                                    <div className={aboutStyles.metaLbl}>Typical timeline</div>
-                                    <div className={aboutStyles.metaVal}>{result.timeline}</div>
-                                </div>
-                                <div className={aboutStyles.metaItemWide}>
-                                    <div className={aboutStyles.metaLblRow}>
-                                        <span className={aboutStyles.metaLbl}>Ballpark investment</span>
-                                        <span className={aboutStyles.metaTier}>{result.investment?.tier}</span>
-                                    </div>
-                                    <div className={aboutStyles.metaVal}>{result.investment?.range}</div>
-                                    <div className={aboutStyles.metaReason}>{result.investment?.reason}</div>
-                                </div>
-                            </div>
-                            <div className={`${aboutStyles.cta} ${ctaVisible ? aboutStyles.ctaVisible : ''}`}>
-                                <p className={aboutStyles.ctaNote}>{result.invite}</p>
-                                <button className={aboutStyles.ctaPrimary} onClick={openCall}>
-                                    <div className={aboutStyles.ctaLhs}>
-                                        <span className={aboutStyles.ctaMain}>Book a call with duoduo</span>
-                                        <span className={aboutStyles.ctaSub}>30 min · Free · We'll come prepared</span>
-                                    </div>
-                                    <span className={aboutStyles.ctaArr}>→</span>
-                                </button>
-                                <button className={aboutStyles.restart} onClick={restart}>Start over</button>
-                            </div>
-                        </div>
-                    )}
-
-                </div>
-            </div>
-
-            {/* ── PORTFOLIO SECTION ── */}
-            <section className={homeStyles.portfolioSection}>
-
-                {/* Desktop carousel */}
-                <div
-                    ref={carouselRef}
-                    className={homeStyles.carouselTrack}
-                >
-                    {LOOPED_PROJECTS.map((project, i) => {
-                        return (
-                        <div
-                            key={`dc-${i}`}
-                            ref={(el) => (desktopItemRefs.current[i] = el)}
-                            className={homeStyles.carouselItem}
-                            onMouseEnter={pause}
-                            onMouseLeave={resume}
-                            onClick={() => { if (project.url) window.open(project.url, '_blank'); }}
-                            style={{ cursor: project.url ? 'pointer' : 'default' }}
+                {/* Form — hidden after submit */}
+                {!result && !loading && !followup && (
+                    <div style={{
+                        width: FORM_W,
+                        transform: formOffset ? `translateX(${formOffset}px)` : undefined,
+                        background: '#ffffff',
+                        padding: CELL,
+                        boxSizing: 'border-box',
+                    }}>
+                        <h1
+                            className={aboutStyles.pageTitle}
+                            style={{ color: '#0d0d0d', textAlign: 'center', marginBottom: CELL }}
                         >
-                            {project.preview && (
-                                project.isVideo ? (
-                                    <video
-                                        className={homeStyles.carouselMedia}
-                                        src={project.preview}
-                                        loop muted playsInline autoPlay draggable={false}
-                                    />
-                                ) : (
-                                    <img
-                                        className={homeStyles.carouselMedia}
-                                        src={project.preview}
-                                        alt={project.name}
-                                        draggable={false}
-                                    />
-                                )
-                            )}
-                            <div className={homeStyles.carouselOverlay}>
-                                <span className={homeStyles.carouselOverlayName}>{project.name}</span>
-                                <span className={homeStyles.carouselOverlayMeta}>
-                                    {project.tag}
-                                    {project.tag && project.subtitle && ' · '}
-                                    {project.subtitle}
-                                </span>
+                            How could <TitleDuoduo onHoverChange={setTitleHovered} /> help you?
+                        </h1>
+
+                        <div className={aboutStyles.inputCardFlip}>
+                            <div className={`${aboutStyles.inputCardInner} ${titleHovered ? aboutStyles.inputCardFlipped : ''}`}>
+
+                                {/* Front: form */}
+                                <div className={aboutStyles.inputCardFront}>
+                                    <div className={aboutStyles.formField}>
+                                        <label className={aboutStyles.fieldLabel}>WHAT&apos;S BREWING?</label>
+                                        <textarea
+                                            className={aboutStyles.mainTextarea}
+                                            style={{ height: 7 * CELL }}
+                                            value={mainInput}
+                                            onChange={(e) => setMainInput(e.target.value)}
+                                            onKeyDown={handleMainKeyDown}
+                                            placeholder="Tell us the what, why, and for whom. We'll solve the how."
+                                        />
+                                        <div className={aboutStyles.formFooter}>
+                                            <span className={aboutStyles.footHint}>⌘↩ to send</span>
+                                            <button className={aboutStyles.submitBtn} onClick={handleSubmit} disabled={!canSubmit}>
+                                                {loading && <span className={aboutStyles.spinner} />}
+                                                <span>{loading ? 'Reading…' : 'Send'}</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Back: studio info */}
+                                <div className={aboutStyles.inputCardBack}>
+                                    <p className={aboutStyles.cardBackText}>
+                                        Duoduo is a product design studio founded by <span className={aboutStyles.cardBackPlayfair}>Gigi &amp; Kiwi</span>.<br />
+                                        Operating between <span className={aboutStyles.cardBackPlayfair}>London and Shenzhen</span>.<br />
+                                        We help people turn ideas into tangible products.<br />
+                                        Aligning vision, experience, and production from day one.
+                                    </p>
+                                </div>
+
                             </div>
                         </div>
-                        );
-                    })}
-                </div>
-
-                {/* Mobile layout */}
-                <section className={homeStyles.mobileLayout}>
-                    <div ref={scrollContainerRef} className={homeStyles.mobileScrollContainer}>
-                        {LOOPED_PROJECTS.map((project, i) => {
-                            const realIndex = i % total;
-                            const isActive = realIndex === activeStep;
-                            return (
-                                <div
-                                    key={`mobile-${i}`}
-                                    className={`${homeStyles.mobileProjectItem} ${isActive ? homeStyles.projectItemActive : homeStyles.projectItem}`}
-                                    style={{ height: MOBILE_ITEM_HEIGHT, minHeight: MOBILE_ITEM_HEIGHT }}
-                                    onClick={() => {
-                                        const el = scrollContainerRef.current;
-                                        if (!el) return;
-                                        const targetTop = i * MOBILE_ITEM_HEIGHT + MOBILE_ITEM_HEIGHT / 2 - el.clientHeight / 2;
-                                        el.scrollTo({ top: targetTop, behavior: 'smooth' });
-                                    }}
-                                >
-                                    <span className={homeStyles.projectName}>{project.name}</span>
-                                    {(project.tag || project.subtitle) && (
-                                        <span className={homeStyles.projectSubtitle}>
-                                            {project.tag && <span className={homeStyles.projectTag}>{project.tag}</span>}
-                                            {project.tag && project.subtitle && ' for '}
-                                            {project.subtitle}
-                                        </span>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        {error && <div className={aboutStyles.error}>{error}</div>}
                     </div>
-                    <div ref={mobilePreviewRef} className={homeStyles.mobilePreview}>
-                        {ALL_PROJECTS.map((project, i) => (
-                            project.preview ? (
-                                project.isVideo ? (
-                                    <video
-                                        key={project.name}
-                                        data-project-index={i}
-                                        className={`${homeStyles.previewImage} ${i === activeStep ? homeStyles.previewVisible : homeStyles.previewHidden}`}
-                                        src={i === activeStep ? project.preview : undefined}
-                                        preload={i === activeStep ? 'auto' : 'none'}
-                                        loop muted playsInline draggable={false}
-                                        onCanPlay={(e) => { if (activeStepRef.current === i) e.target.play().catch(() => {}); }}
-                                    />
-                                ) : (
-                                    <img
-                                        key={project.name}
-                                        className={`${homeStyles.previewImage} ${i === activeStep ? homeStyles.previewVisible : homeStyles.previewHidden}`}
-                                        src={project.preview}
-                                        alt={project.name}
-                                        draggable={false}
-                                    />
-                                )
-                            ) : (
-                                <div
-                                    key={project.name}
-                                    className={`${homeStyles.previewInner} ${i === activeStep ? homeStyles.previewVisible : homeStyles.previewHidden}`}
-                                >
-                                    <span className={homeStyles.previewLabel}>{project.name}</span>
-                                </div>
-                            )
-                        ))}
+                )}
+
+                {/* Loading */}
+                {loading && submittedText && (
+                    <div className={aboutStyles.loadingCentered} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                        <blockquote className={aboutStyles.userQuote}>
+                            {submittedText}
+                        </blockquote>
+                        <div className={aboutStyles.loading}>
+                            <AvatarAni className={aboutStyles.loadingAvatar} style={{ color: '#FF2EDC' }} />
+                            <div key={loadingMsgIdx} className={aboutStyles.loadingMsg}>
+                                {LOADING_MSGS[loadingMsgIdx % LOADING_MSGS.length]}
+                            </div>
+                        </div>
                     </div>
-                </section>
+                )}
 
-            </section>
+                {/* Quote top */}
+                {(result || followup) && submittedText && (
+                    <div className={aboutStyles.submittedTop} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                        <blockquote className={aboutStyles.userQuote}>
+                            {submittedText}
+                        </blockquote>
+                    </div>
+                )}
 
+                {/* Follow-up */}
+                {followup && (
+                    <div className={aboutStyles.followup} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                        <div className={aboutStyles.fqHead}>
+                            <div className={aboutStyles.fqEye}>One question</div>
+                            <div className={aboutStyles.fqQ}>{followup.question}</div>
+                        </div>
+                        <div className={aboutStyles.fqBody}>
+                            <textarea
+                                className={aboutStyles.fqTextarea}
+                                value={followupInput}
+                                onChange={(e) => setFollowupInput(e.target.value)}
+                                placeholder="Your answer…"
+                                rows={2}
+                                autoFocus
+                            />
+                            <button className={aboutStyles.fqBtn} onClick={handleFollowup}>Continue →</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Result */}
+                {result && (
+                    <div className={aboutStyles.result} ref={resultRef} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+
+                        {/* Fax transmission header */}
+                        <div className={aboutStyles.faxHead}>
+                            <div className={aboutStyles.faxFrom}>
+                                DUODUO STUDIO<br />
+                                TRANSMISSION
+                            </div>
+                            <div className={aboutStyles.faxHeadRight}>
+                                DATE: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}<br />
+                                PAGES: 01 / 01
+                            </div>
+                        </div>
+
+                        <div className={aboutStyles.reframe}>
+                            <div className={aboutStyles.reframeEye}>What we hear</div>
+                            <div className={aboutStyles.reframeBody}>{result.read}</div>
+                        </div>
+                        <div className={aboutStyles.approachCard}>
+                            <div className={aboutStyles.approachEye}>How we&apos;d approach this</div>
+                            <div className={aboutStyles.approachBody}>{result.approach}</div>
+                        </div>
+                        <div className={aboutStyles.meta}>
+                            <div className={aboutStyles.metaItem}>
+                                <span className={aboutStyles.metaLbl}>Timeline</span>
+                                <span className={aboutStyles.metaVal}>{result.timeline}</span>
+                            </div>
+                            <div className={aboutStyles.metaItemWide}>
+                                <div className={aboutStyles.metaLblRow}>
+                                    <span className={aboutStyles.metaLbl}>Investment</span>
+                                    <span className={aboutStyles.metaVal}>{result.investment?.range}</span>
+                                    <span className={aboutStyles.metaTier}>[{result.investment?.tier}]</span>
+                                </div>
+                                <div className={aboutStyles.metaReason}>{result.investment?.reason}</div>
+                            </div>
+                        </div>
+                        <div className={`${aboutStyles.cta} ${ctaVisible ? aboutStyles.ctaVisible : ''}`}>
+                            <p className={aboutStyles.ctaNote}>{result.invite}</p>
+                            <button className={aboutStyles.ctaPrimary} onClick={openCall}>
+                                <div className={aboutStyles.ctaLhs}>
+                                    <span className={aboutStyles.ctaMain}>Book a call with duoduo</span>
+                                    <span className={aboutStyles.ctaSub}>30 min · Free · We&apos;ll come prepared</span>
+                                </div>
+                                <span className={aboutStyles.ctaArr}>→</span>
+                            </button>
+                            <button className={aboutStyles.restart} onClick={restart}>
+                                [ start over ]
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+            </div>
         </div>
     );
 }
