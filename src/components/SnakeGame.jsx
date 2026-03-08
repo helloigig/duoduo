@@ -403,44 +403,45 @@ export default function SnakeGame() {
             })));
         }
 
-        function drawFrame(snake, projects, targetIdx, fz) {
+        function drawFrame(snake, projects, targetIdx, fz, timestamp) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // ── Dashed indicator around current target ──
             const tgt = projects[targetIdx];
             if (tgt && previewRef.current !== tgt.id) {
-                ctx.strokeStyle = 'rgba(0,0,0,0.13)';
+                ctx.strokeStyle = 'rgba(0,0,0,0.07)';
                 ctx.lineWidth   = 0.5;
                 ctx.setLineDash([2, 4]);
                 ctx.strokeRect(
-                    tgt.col * CELL + 1.5, tgt.row * CELL + 1.5,
-                    CELL - 2, CELL - 2
+                    tgt.col * CELL + 0.5, tgt.row * CELL + 0.5,
+                    CELL - 1, CELL - 1
                 );
                 ctx.setLineDash([]);
             }
 
-            // ── Snake body — uniform light gray ──
-            ctx.fillStyle = '#BBBBBB';
-            snake.forEach(({ col, row }) => {
-                ctx.fillRect(col * CELL + 1, row * CELL + 1, CELL - 1, CELL - 1);
+            // ── Snake body — eaten segments get a muted solid tint ──
+            snake.forEach(({ col, row, eatColor }) => {
+                if (eatColor) {
+                    // Blend project color toward #E3E3E3 at 85% (very subtle)
+                    const r = parseInt(eatColor.slice(1, 3), 16);
+                    const g = parseInt(eatColor.slice(3, 5), 16);
+                    const b = parseInt(eatColor.slice(5, 7), 16);
+                    const mix = 0.88;
+                    const mr = Math.round(r * (1 - mix) + 0xE3 * mix);
+                    const mg = Math.round(g * (1 - mix) + 0xE3 * mix);
+                    const mb = Math.round(b * (1 - mix) + 0xE3 * mix);
+                    ctx.fillStyle = `rgb(${mr},${mg},${mb})`;
+                } else {
+                    ctx.fillStyle = '#E3E3E3';
+                }
+                ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
             });
 
-            // ── Head overlay ──
-            if (snake.length > 0) {
+            // ── Head — filled with target's color ──
+            if (snake.length > 0 && tgt) {
                 const h = snake[0];
-                if (manualRef.current) {
-                    // Manual mode: darker head as indicator
-                    ctx.fillStyle = '#444444';
-                    ctx.fillRect(h.col * CELL + 1, h.row * CELL + 1, CELL - 1, CELL - 1);
-                } else if (tgt) {
-                    // Auto mode: tiny colored dot pointing at current target
-                    const cx = h.col * CELL + CELL / 2 + 0.5;
-                    const cy = h.row * CELL + CELL / 2 + 0.5;
-                    ctx.fillStyle = tgt.color;
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                ctx.fillStyle = tgt.color;
+                ctx.fillRect(h.col * CELL, h.row * CELL, CELL, CELL);
             }
         }
 
@@ -453,7 +454,7 @@ export default function SnakeGame() {
             if (!g) return;
 
             if (pausedRef.current) {
-                drawFrame(g.snake, g.projects, g.targetIdx, g.fz);
+                drawFrame(g.snake, g.projects, g.targetIdx, g.fz, timestamp);
                 return;
             }
 
@@ -497,6 +498,8 @@ export default function SnakeGame() {
             const eaten    = eating ? projects[eatenIdx] : null;
 
             // Grow on eat, otherwise slide (drop tail)
+            // Tag the new head with the eaten project's color
+            if (eating) newHead.eatColor = eaten.color;
             g.snake = eating ? [newHead, ...snake] : [newHead, ...snake.slice(0, -1)];
 
             setHeadCell({ col: newHead.col, row: newHead.row });
@@ -528,7 +531,7 @@ export default function SnakeGame() {
                 }, 3000);
             }
 
-            drawFrame(g.snake, g.projects, g.targetIdx, g.fz);
+            drawFrame(g.snake, g.projects, g.targetIdx, g.fz, timestamp);
         }
 
         const KEY_MAP = {
@@ -583,10 +586,17 @@ export default function SnakeGame() {
                 position: 'fixed', inset: 0, zIndex: 0,
                 background: '#F2F2F2',
                 backgroundImage: [
-                    `linear-gradient(#E0E0E0 1px, transparent 1px)`,
-                    `linear-gradient(90deg, #E0E0E0 1px, transparent 1px)`,
+                    `linear-gradient(#E3E3E3 1px, transparent 1px)`,
+                    `linear-gradient(90deg, #E3E3E3 1px, transparent 1px)`,
                 ].join(', '),
                 backgroundSize: `${CELL}px ${CELL}px`,
+                pointerEvents: 'none',
+            }} />
+
+            {/* Radial vignette — fades edges to draw focus to center */}
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 0,
+                background: 'radial-gradient(ellipse 60% 50% at 50% 50%, transparent 0%, rgba(242,242,242,0.85) 100%)',
                 pointerEvents: 'none',
             }} />
 
@@ -607,13 +617,12 @@ export default function SnakeGame() {
                             onMouseLeave={handleSquareLeave}
                             style={{
                                 position:        'absolute',
-                                // Fill the full cell interior — grid line acts as border
-                                left:            p.px + 1,
-                                top:             p.py + 1,
-                                width:           CELL - 1,
-                                height:          CELL - 1,
-                                backgroundColor: p.color,
-                                cursor:          'default',
+                                left:            p.px,
+                                top:             p.py,
+                                width:           CELL,
+                                height:          CELL,
+                                backgroundColor: '#E3E3E3',
+                                cursor:          'pointer',
                                 pointerEvents:   'auto',
                                 opacity:         isActive ? 0.6 : 1,
                                 transition:      'opacity 0.15s',

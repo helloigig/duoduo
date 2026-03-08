@@ -6,7 +6,7 @@ import Link from 'next/link';
 import aboutStyles from '@/styles/about.module.css';
 import { SYS } from '@/lib/prompt';
 import SnakeGame from '@/components/SnakeGame';
-import { CELL, FORM_COLS } from '@/lib/grid';
+import { CELL, FORM_COLS, FORM_ROWS } from '@/lib/grid';
 
 // ── AVATAR ANIMATION COMPONENT ────────────────────────────────────────────────
 const HAIR_D = "M34.4919 43.7134C32.6776 47.016 27.7524 57.9013 26.6679 63.3257C26.5839 63.7459 27.8517 62.9688 31.8706 58.4333C35.8894 53.8977 43.0341 45.4914 46.7936 41.4394C50.5531 37.3874 50.7109 37.9445 51.8697 44.2038C53.0285 50.4631 55.1837 62.4077 56.5698 68.2805C57.956 74.1534 58.5079 73.5926 58.9026 73.0088C59.6448 71.9111 61.5177 63.0074 64.5056 50.6634C65.5171 46.485 66.3276 46.7621 68.5281 51.549C74.9371 65.4906 78.9302 74.8187 79.868 73.1751C80.2725 72.022 80.5318 70.221 80.9261 66.6929C81.3204 63.165 81.8419 57.9649 82.3792 52.607L82.3794 52.6057M82.5905 44.4677C82.6446 44.304 82.6987 44.1403 82.9392 44.3089C83.1796 44.4776 83.6049 44.9836 86.4925 50.0756C89.38 55.1677 94.717 64.8305 97.6364 69.2056C100.556 73.5807 100.896 72.3754 101.024 68.4973C101.369 58.1107 101.229 49.7095 101.965 47.1415C102.241 46.179 103.1 46.224 104.433 47.5636C105.766 48.9033 107.746 51.617 111.01 56.6314C118.917 68.7789 124.169 77.3463 125.353 78.4185C129.395 82.0775 122.778 60.7137 122.717 55.5016C122.706 54.588 130.99 63.3757 141.324 74.7754C144.701 78.5006 145.017 77.3487 144.357 72.5161C142.509 58.9878 141.277 49.8663 142.876 50.2149C146.109 50.9194 151.233 58.1509 157.894 65.2331C162.721 70.3654 165.87 71.4928 166.97 71.4786C170.598 71.4316 166.895 60.3063 161.691 49.8817C159.757 46.0062 155.514 41.6757 151.506 37.4454C143.674 29.1798 138.508 25.4296 137.468 24.7984C136.393 24.1464 131.843 21.6179 123.335 17.6549C118.956 15.6149 114.144 14.2097 108.229 12.9153C102.313 11.6208 95.3612 10.657 88.0026 10.2394C80.6441 9.82174 73.0897 9.97954 66.2359 10.4887C59.382 10.9978 53.4575 11.8535 48.1626 12.9903C38.2853 15.1109 32.4059 17.6698 28.7186 19.9494C18.3231 26.3764 14.3622 32.3812 11.8213 36.7429C9.4111 40.8801 11.2376 47.2717 12.5039 51.1684C15.0736 57.2807 16.847 60.784 18.1288 62.4784C18.7143 63.1875 19.1676 63.5905 20.3577 64.5759";
@@ -45,7 +45,7 @@ function TitleDuoduo({ onHoverChange }) {
     const [hovered, setHovered] = useState(false);
     return (
         <span
-            style={{ color: '#FF2EDC', display: 'inline', cursor: 'default' }}
+            style={{ color: '#0d0d0d', display: 'inline', cursor: 'default' }}
             onMouseEnter={() => { setHovered(true); onHoverChange?.(true); }}
             onMouseLeave={() => { setHovered(false); onHoverChange?.(false); }}
         >
@@ -93,6 +93,16 @@ const LOADING_MSGS = [
     'Almost there, stay cool.',
 ];
 
+// ── ROTATING PLACEHOLDERS ─────────────────────────────────────────────────────
+const EXAMPLES = [
+    'a mobile app',
+    'a website redesign',
+    'a brand identity',
+    'an AI product',
+    'a SaaS dashboard',
+    'a D2C launch',
+];
+
 // ── COMBINED PAGE ─────────────────────────────────────────────────────────────
 export default function Home() {
     const [titleHovered,   setTitleHovered]   = useState(false);
@@ -107,21 +117,36 @@ export default function Home() {
     const [error,          setError]          = useState('');
     const [ctaVisible,     setCtaVisible]     = useState(false);
     const resultRef = useRef(null);
+    const [placeholderIdx, setPlaceholderIdx] = useState(0);
     const canSubmit = mainInput.trim().length >= 8 && !loading;
 
-    // Nudge form horizontally so its edges land on grid lines
+    // Cycle examples
+    useEffect(() => {
+        const id = setInterval(() => setPlaceholderIdx(i => (i + 1) % EXAMPLES.length), 3000);
+        return () => clearInterval(id);
+    }, []);
+
+    // Snap form to grid — both horizontally and vertically centered
     const FORM_W = FORM_COLS * CELL; // 560 px
-    const [formOffset, setFormOffset] = useState(0);
+    const [formSnap, setFormSnap] = useState({ left: 0, top: 0, offsetX: 0 });
     useEffect(() => {
         const snap = () => {
+            const cols = Math.floor(window.innerWidth / CELL);
+            const rows = Math.floor(window.innerHeight / CELL);
+            const formCol = Math.floor((cols - FORM_COLS) / 2);
+            const formRow = Math.floor((rows - FORM_ROWS) / 2);
+            const snappedLeft = formCol * CELL;
             const naturalLeft = (window.innerWidth - FORM_W) / 2;
-            const col = Math.round(naturalLeft / CELL);
-            setFormOffset(col * CELL - naturalLeft);
+            setFormSnap({
+                left: snappedLeft,
+                top: formRow * CELL,
+                offsetX: snappedLeft - naturalLeft, // nudge for flexbox-centered elements
+            });
         };
         snap();
         window.addEventListener('resize', snap);
         return () => window.removeEventListener('resize', snap);
-    }, [FORM_W]);
+    }, []);
 
     // ── API ────────────────────────────────────────────────────────────────────
     const callAPI = useCallback(async (msgs) => {
@@ -155,7 +180,10 @@ export default function Home() {
     }, []);
 
     const handleMainKeyDown = (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleSubmit();
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey || e.shiftKey)) {
+            e.preventDefault();
+            handleSubmit();
+        }
     };
 
     const handleSubmit = useCallback(async () => {
@@ -227,8 +255,8 @@ export default function Home() {
                 href="/work"
                 style={{
                     position: 'fixed',
-                    top: 20,
-                    right: 24,
+                    top: CELL,
+                    right: CELL,
                     zIndex: 50,
                     fontFamily: 'var(--font-geist-sans), sans-serif',
                     fontSize: 12,
@@ -238,8 +266,13 @@ export default function Home() {
                     textTransform: 'uppercase',
                     textDecoration: 'none',
                     background: '#fff',
-                    padding: '6px 12px',
+                    width: CELL * 8,
+                    height: CELL * 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     border: '1px solid #e5e5e5',
+                    boxSizing: 'border-box',
                 }}
             >
                 Work →
@@ -255,7 +288,7 @@ export default function Home() {
                 display:        'flex',
                 flexDirection:  'column',
                 alignItems:     'center',
-                justifyContent: result || loading ? 'flex-start' : 'center',
+                justifyContent: result || loading ? 'flex-start' : 'flex-start',
                 padding:        result || loading ? '80px 24px 120px' : '0 24px',
                 scrollbarWidth: 'none',
             }}>
@@ -263,17 +296,28 @@ export default function Home() {
                 {/* Form — hidden after submit */}
                 {!result && !loading && !followup && (
                     <div style={{
+                        position: 'absolute',
+                        left: formSnap.left,
+                        top: formSnap.top - CELL * 3,
                         width: FORM_W,
-                        transform: formOffset ? `translateX(${formOffset}px)` : undefined,
-                        background: '#ffffff',
-                        padding: CELL,
+                        height: FORM_ROWS * CELL,
+                        background: '#F2F2F2',
+                        padding: CELL * 3,
                         boxSizing: 'border-box',
+                        borderTop: '1px solid #E3E3E3',
+                        borderLeft: '1px solid #E3E3E3',
                     }}>
                         <h1
                             className={aboutStyles.pageTitle}
-                            style={{ color: '#0d0d0d', textAlign: 'center', marginBottom: CELL }}
+                            style={{ color: '#0d0d0d', textAlign: 'center', marginBottom: CELL * 2 }}
                         >
-                            How could <TitleDuoduo onHoverChange={setTitleHovered} /> help you?
+                            How could <TitleDuoduo onHoverChange={setTitleHovered} /> help with{' '}
+                            <span className={aboutStyles.exampleInline}>
+                                <span key={placeholderIdx} className={aboutStyles.exampleSlide}>
+                                    {EXAMPLES[placeholderIdx]}
+                                </span>
+                            </span>
+                            ?
                         </h1>
 
                         <div className={aboutStyles.inputCardFlip}>
@@ -282,21 +326,16 @@ export default function Home() {
                                 {/* Front: form */}
                                 <div className={aboutStyles.inputCardFront}>
                                     <div className={aboutStyles.formField}>
-                                        <label className={aboutStyles.fieldLabel}>WHAT&apos;S BREWING?</label>
                                         <textarea
                                             className={aboutStyles.mainTextarea}
-                                            style={{ height: 7 * CELL }}
+                                            style={{ height: 5 * CELL }}
                                             value={mainInput}
                                             onChange={(e) => setMainInput(e.target.value)}
                                             onKeyDown={handleMainKeyDown}
                                             placeholder="Tell us the what, why, and for whom. We'll solve the how."
                                         />
                                         <div className={aboutStyles.formFooter}>
-                                            <span className={aboutStyles.footHint}>⌘↩ to send</span>
-                                            <button className={aboutStyles.submitBtn} onClick={handleSubmit} disabled={!canSubmit}>
-                                                {loading && <span className={aboutStyles.spinner} />}
-                                                <span>{loading ? 'Reading…' : 'Send'}</span>
-                                            </button>
+                                            <span className={aboutStyles.footHint}>⇧↩ to send</span>
                                         </div>
                                     </div>
                                 </div>
@@ -319,7 +358,7 @@ export default function Home() {
 
                 {/* Loading */}
                 {loading && submittedText && (
-                    <div className={aboutStyles.loadingCentered} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                    <div className={aboutStyles.loadingCentered} style={{ width: FORM_W, transform: formSnap.offsetX ? `translateX(${formSnap.offsetX}px)` : undefined }}>
                         <blockquote className={aboutStyles.userQuote}>
                             {submittedText}
                         </blockquote>
@@ -334,7 +373,7 @@ export default function Home() {
 
                 {/* Quote top */}
                 {(result || followup) && submittedText && (
-                    <div className={aboutStyles.submittedTop} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                    <div className={aboutStyles.submittedTop} style={{ width: FORM_W, transform: formSnap.offsetX ? `translateX(${formSnap.offsetX}px)` : undefined }}>
                         <blockquote className={aboutStyles.userQuote}>
                             {submittedText}
                         </blockquote>
@@ -343,7 +382,7 @@ export default function Home() {
 
                 {/* Follow-up */}
                 {followup && (
-                    <div className={aboutStyles.followup} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                    <div className={aboutStyles.followup} style={{ width: FORM_W, transform: formSnap.offsetX ? `translateX(${formSnap.offsetX}px)` : undefined }}>
                         <div className={aboutStyles.fqHead}>
                             <div className={aboutStyles.fqEye}>One question</div>
                             <div className={aboutStyles.fqQ}>{followup.question}</div>
@@ -364,7 +403,7 @@ export default function Home() {
 
                 {/* Result */}
                 {result && (
-                    <div className={aboutStyles.result} ref={resultRef} style={{ width: FORM_W, transform: formOffset ? `translateX(${formOffset}px)` : undefined }}>
+                    <div className={aboutStyles.result} ref={resultRef} style={{ width: FORM_W, transform: formSnap.offsetX ? `translateX(${formSnap.offsetX}px)` : undefined }}>
 
                         {/* Fax transmission header */}
                         <div className={aboutStyles.faxHead}>
