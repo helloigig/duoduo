@@ -382,7 +382,9 @@ export default function SnakeGame() {
             const cols = Math.floor(canvas.width  / CELL);
             const rows = Math.floor(canvas.height / CELL);
 
-            const fz       = formZoneFor(cols, rows);
+            // Extend zone upward to also cover the title above the input box
+            const fzBase   = formZoneFor(cols, rows);
+            const fz       = { ...fzBase, r1: Math.max(0, fzBase.r1 - 10) };
             const projects = randomisePositions(cols, rows);
 
             const startCol = Math.floor(cols * 0.12);
