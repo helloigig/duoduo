@@ -177,9 +177,11 @@ function bestDir(head, target, curDir, cols, rows, fz, snake) {
     const safeDirs = ordered.filter(d => safe(d));
 
     if (safeDirs.length === 0) {
-        // Absolute last resort: allow form zone, but not reversal
+        // Last resort: avoid form zone, allow body collision
         for (const d of ordered) {
-            if (d !== OPP[curDir]) return d;
+            if (d === OPP[curDir]) continue;
+            const { col: nc, row: nr } = nextCell(d);
+            if (!inZone(nc, nr, fz)) return d;
         }
         return curDir;
     }
@@ -419,28 +421,16 @@ export default function SnakeGame() {
                 ctx.setLineDash([]);
             }
 
-            // ── Snake body — eaten segments get a muted solid tint ──
-            snake.forEach(({ col, row, eatColor }) => {
-                if (eatColor) {
-                    // Blend project color toward #E3E3E3 at 85% (very subtle)
-                    const r = parseInt(eatColor.slice(1, 3), 16);
-                    const g = parseInt(eatColor.slice(3, 5), 16);
-                    const b = parseInt(eatColor.slice(5, 7), 16);
-                    const mix = 0.88;
-                    const mr = Math.round(r * (1 - mix) + 0xE3 * mix);
-                    const mg = Math.round(g * (1 - mix) + 0xE3 * mix);
-                    const mb = Math.round(b * (1 - mix) + 0xE3 * mix);
-                    ctx.fillStyle = `rgb(${mr},${mg},${mb})`;
-                } else {
-                    ctx.fillStyle = '#E3E3E3';
-                }
+            // ── Snake body ──
+            snake.forEach(({ col, row }) => {
+                ctx.fillStyle = '#E3E3E3';
                 ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
             });
 
-            // ── Head — filled with target's color ──
-            if (snake.length > 0 && tgt) {
+            // ── Head — dedicated yellow ──
+            if (snake.length > 0) {
                 const h = snake[0];
-                ctx.fillStyle = tgt.color;
+                ctx.fillStyle = '#F5C518';
                 ctx.fillRect(h.col * CELL, h.row * CELL, CELL, CELL);
             }
         }
@@ -492,14 +482,18 @@ export default function SnakeGame() {
                 row: ((head.row + dr) % rows + rows) % rows,
             };
 
+            // Hard block: never enter the form zone
+            if (inZone(newHead.col, newHead.row, fz)) {
+                drawFrame(g.snake, g.projects, g.targetIdx, g.fz, timestamp);
+                return;
+            }
+
             // Check all projects for a hit — in manual mode the user can land on any square
             const eatenIdx = projects.findIndex(p => p.col === newHead.col && p.row === newHead.row);
             const eating   = eatenIdx !== -1;
             const eaten    = eating ? projects[eatenIdx] : null;
 
             // Grow on eat, otherwise slide (drop tail)
-            // Tag the new head with the eaten project's color
-            if (eating) newHead.eatColor = eaten.color;
             g.snake = eating ? [newHead, ...snake] : [newHead, ...snake.slice(0, -1)];
 
             setHeadCell({ col: newHead.col, row: newHead.row });
@@ -624,7 +618,7 @@ export default function SnakeGame() {
                                 backgroundColor: '#E3E3E3',
                                 cursor:          'pointer',
                                 pointerEvents:   'auto',
-                                opacity:         isActive ? 0.6 : 1,
+                                opacity:         snakeOn ? 0 : isActive ? 0.6 : 1,
                                 transition:      'opacity 0.15s',
                             }}
                         />

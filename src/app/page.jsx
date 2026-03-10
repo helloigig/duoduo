@@ -105,7 +105,6 @@ const EXAMPLES = [
 
 // ── COMBINED PAGE ─────────────────────────────────────────────────────────────
 export default function Home() {
-    const [titleHovered,   setTitleHovered]   = useState(false);
     const [mainInput,      setMainInput]      = useState('');
     const [loadingMsgIdx,  setLoadingMsgIdx]  = useState(0);
     const [submittedText,  setSubmittedText]  = useState('');
@@ -295,65 +294,67 @@ export default function Home() {
 
                 {/* Form — hidden after submit */}
                 {!result && !loading && !followup && (
-                    <div style={{
-                        position: 'absolute',
-                        left: formSnap.left,
-                        top: formSnap.top - CELL * 3,
-                        width: FORM_W,
-                        height: FORM_ROWS * CELL,
-                        background: '#F2F2F2',
-                        padding: CELL * 3,
-                        boxSizing: 'border-box',
-                        borderTop: '1px solid #E3E3E3',
-                        borderLeft: '1px solid #E3E3E3',
-                    }}>
+                    <>
+                        <div style={{
+                            position: 'absolute',
+                            left: formSnap.left,
+                            top: formSnap.top - CELL * 5,
+                            width: FORM_W,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 20,
+                        }}>
                         <h1
                             className={aboutStyles.pageTitle}
-                            style={{ color: '#0d0d0d', textAlign: 'center', marginBottom: CELL * 2 }}
+                            style={{
+                                color: '#0d0d0d',
+                                textAlign: 'center',
+                                margin: 0,
+                                padding: `0 ${CELL * 3}px`,
+                            }}
                         >
-                            How could <TitleDuoduo onHoverChange={setTitleHovered} /> help with{' '}
+                            How could <TitleDuoduo /> help with{' '}
                             <span className={aboutStyles.exampleInline}>
                                 <span key={placeholderIdx} className={aboutStyles.exampleSlide}>
                                     {EXAMPLES[placeholderIdx]}
                                 </span>
                             </span>
-                            ?
                         </h1>
 
-                        <div className={aboutStyles.inputCardFlip}>
-                            <div className={`${aboutStyles.inputCardInner} ${titleHovered ? aboutStyles.inputCardFlipped : ''}`}>
-
-                                {/* Front: form */}
-                                <div className={aboutStyles.inputCardFront}>
-                                    <div className={aboutStyles.formField}>
-                                        <textarea
-                                            className={aboutStyles.mainTextarea}
-                                            style={{ height: 5 * CELL }}
-                                            value={mainInput}
-                                            onChange={(e) => setMainInput(e.target.value)}
-                                            onKeyDown={handleMainKeyDown}
-                                            placeholder="Tell us the what, why, and for whom. We'll solve the how."
-                                        />
-                                        <div className={aboutStyles.formFooter}>
-                                            <span className={aboutStyles.footHint}>⇧↩ to send</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Back: studio info */}
-                                <div className={aboutStyles.inputCardBack}>
-                                    <p className={aboutStyles.cardBackText}>
-                                        Duoduo is a product design studio founded by <span className={aboutStyles.cardBackPlayfair}>Gigi &amp; Kiwi</span>.<br />
-                                        Operating between <span className={aboutStyles.cardBackPlayfair}>London and Shenzhen</span>.<br />
-                                        We help people turn ideas into tangible products.<br />
-                                        Aligning vision, experience, and production from day one.
-                                    </p>
-                                </div>
-
+                        <div style={{
+                            width: FORM_W,
+                            height: CELL * 12,
+                            background: '#F2F2F2',
+                            padding: CELL,
+                            boxSizing: 'border-box',
+                            borderTop: '1px solid #E3E3E3',
+                            borderLeft: '1px solid #E3E3E3',
+                        }}>
+                        <div className={aboutStyles.formField}>
+                            <textarea
+                                className={aboutStyles.mainTextarea}
+                                style={{ height: 7 * CELL }}
+                                value={mainInput}
+                                onChange={(e) => setMainInput(e.target.value)}
+                                onKeyDown={handleMainKeyDown}
+                                placeholder="Tell us the what, why, and for whom. We'll solve the how."
+                                aria-label="Describe your project"
+                            />
+                            <div className={aboutStyles.formFooter}>
+                                <button
+                                    type="button"
+                                    className={aboutStyles.submitBtn}
+                                    onClick={handleSubmit}
+                                    disabled={!canSubmit}
+                                >
+                                    Send →
+                                </button>
                             </div>
                         </div>
                         {error && <div className={aboutStyles.error}>{error}</div>}
                     </div>
+                        </div>
+                    </>
                 )}
 
                 {/* Loading */}
@@ -396,7 +397,7 @@ export default function Home() {
                                 rows={2}
                                 autoFocus
                             />
-                            <button className={aboutStyles.fqBtn} onClick={handleFollowup}>Continue →</button>
+                            <button type="button" className={aboutStyles.fqBtn} onClick={handleFollowup}>Continue →</button>
                         </div>
                     </div>
                 )}
@@ -441,14 +442,14 @@ export default function Home() {
                         </div>
                         <div className={`${aboutStyles.cta} ${ctaVisible ? aboutStyles.ctaVisible : ''}`}>
                             <p className={aboutStyles.ctaNote}>{result.invite}</p>
-                            <button className={aboutStyles.ctaPrimary} onClick={openCall}>
+                            <button type="button" className={aboutStyles.ctaPrimary} onClick={openCall}>
                                 <div className={aboutStyles.ctaLhs}>
                                     <span className={aboutStyles.ctaMain}>Book a call with duoduo</span>
                                     <span className={aboutStyles.ctaSub}>30 min · Free · We&apos;ll come prepared</span>
                                 </div>
                                 <span className={aboutStyles.ctaArr}>→</span>
                             </button>
-                            <button className={aboutStyles.restart} onClick={restart}>
+                            <button type="button" className={aboutStyles.restart} onClick={restart}>
                                 [ start over ]
                             </button>
                         </div>
