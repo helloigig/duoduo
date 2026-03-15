@@ -378,7 +378,7 @@
     background: #b7ea10;
     color: #0d0d0d;
     border: none;
-    border-radius: 0;
+    border-radius: 8px;
     padding: 9px 20px;
     font-family: var(--font-geist-sans), sans-serif;
     font-size: 12px;
