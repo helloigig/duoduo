@@ -99,7 +99,7 @@ function randomNewPos(cols, rows, fz, snake, projects, excludeIdx) {
  * Capped at CAP to stay fast; returns how many free cells are reachable.
  */
 function floodCount(col, row, cols, rows, fz, bodySet) {
-    const CAP     = 200;
+    const CAP     = cols * rows; // full grid — no early cutoff so space readings are accurate
     const visited = new Set([`${col},${row}`]);
     const queue   = [[col, row]];
     while (queue.length > 0 && visited.size < CAP) {
@@ -152,7 +152,7 @@ function bestDir(head, target, curDir, cols, rows, fz, snake) {
         (curDir === 'd' && dy > 0) || (curDir === 'u' && dy < 0);
     if (isTowardTarget && safe(curDir)) {
         const { col: nc, row: nr } = nextCell(curDir);
-        if (floodCount(nc, nr, cols, rows, fz, body) >= snakeLen) return curDir;
+        if (floodCount(nc, nr, cols, rows, fz, body) >= snakeLen * 2) return curDir;
     }
 
     // Build candidate order:
@@ -193,12 +193,45 @@ function bestDir(head, target, curDir, cols, rows, fz, snake) {
         return { d, space: floodCount(nc, nr, cols, rows, fz, body) };
     });
 
-    // Prefer directions with enough room (>= snake length).
+    // Prefer directions with enough room (2× snake length gives buffer to manoeuvre).
     // Among those, return the first in preferred order (toward target).
-    const adequate = scored.filter(s => s.space >= snakeLen);
+    const adequate = scored.filter(s => s.space >= snakeLen * 2);
     if (adequate.length > 0) return adequate[0].d;
 
-    // All paths are tight — pick the roomiest to maximise survival
+    // All paths are tight — tail-chase to guarantee survival.
+    // The tail always vacates one cell per step, so any path that can reach
+    // the tail is inherently survivable (the snake can loop behind itself).
+    const tail = (snake ?? [])[snake.length - 1];
+    if (tail) {
+        function reachesTail(startCol, startRow) {
+            const visited = new Set([`${startCol},${startRow}`]);
+            const q = [[startCol, startRow]];
+            while (q.length > 0) {
+                const [c, r] = q.shift();
+                if (c === tail.col && r === tail.row) return true;
+                for (const [dc, dr] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+                    const nc = ((c + dc) % cols + cols) % cols;
+                    const nr = ((r + dr) % rows + rows) % rows;
+                    const k  = `${nc},${nr}`;
+                    if (!visited.has(k) && !body.has(k) && !inZone(nc, nr, fz)) {
+                        visited.add(k);
+                        q.push([nc, nr]);
+                    }
+                }
+            }
+            return false;
+        }
+        const tailSafe = scored.filter(s => {
+            const { col: nc, row: nr } = nextCell(s.d);
+            return reachesTail(nc, nr);
+        });
+        if (tailSafe.length > 0) {
+            tailSafe.sort((a, b) => b.space - a.space);
+            return tailSafe[0].d;
+        }
+    }
+
+    // Absolute last resort — pick the roomiest direction
     scored.sort((a, b) => b.space - a.space);
     return scored[0].d;
 }
@@ -346,13 +379,16 @@ export default function SnakeGame() {
     const manualTimerRef    = useRef(null);  // timeout to revert to auto after 5 s
     const nextDirRef        = useRef(null);  // queued direction from latest keypress
     const postEatRef        = useRef(null);  // pending repositioning fn, run when preview closes
+    const successRef        = useRef(null);  // { startTime } during success animation
+    const eatenThisRoundRef = useRef(new Set()); // IDs eaten in current round
 
     const [preview,      setPreview]      = useState(null); // eating-triggered, pauses snake
     const [hoverPreview, setHoverPreview] = useState(null); // hover-triggered, snake keeps moving
     const [lightbox,     setLightbox]     = useState(null);
-    const [computed, setComputed] = useState([]);
-    const [viewport, setViewport] = useState({ w: 0, h: 0 });
-    const [headCell, setHeadCell] = useState({ col: -1, row: -1 });
+    const [computed,  setComputed]  = useState([]);
+    const [eatenIds,  setEatenIds]  = useState(new Set()); // projects hidden this round
+    const [viewport,  setViewport]  = useState({ w: 0, h: 0 });
+    const [headCell,  setHeadCell]  = useState({ col: -1, row: -1 });
 
     const closePreview = useCallback(() => {
         if (autoCloseTimerRef.current) {
@@ -399,6 +435,8 @@ export default function SnakeGame() {
                 targetIdx: nearestIdx({ col: startCol, row: startRow }, projects),
             };
 
+            eatenThisRoundRef.current = new Set();
+            setEatenIds(new Set());
             setViewport({ w: canvas.width, h: canvas.height });
             setComputed(projects.map(p => ({
                 ...p,
@@ -442,8 +480,52 @@ export default function SnakeGame() {
             }
         }
 
+        function drawSuccess(timestamp) {
+            const { startTime, cells } = successRef.current;
+            const elapsed  = timestamp - startTime;
+            const total    = cells.length;
+            const BUILD_MS = 1000;
+            const HOLD_MS  = 400;
+            const FADE_MS  = 600;
+            const totalMs  = BUILD_MS + HOLD_MS + FADE_MS;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // How many cells are visible in the build phase
+            const visible = Math.min(total, Math.floor((elapsed / BUILD_MS) * total));
+
+            // Global alpha for fade phase
+            let fadeAlpha = 1;
+            if (elapsed > BUILD_MS + HOLD_MS) {
+                fadeAlpha = Math.max(0, 1 - (elapsed - BUILD_MS - HOLD_MS) / FADE_MS);
+            }
+
+            ctx.fillStyle = `rgba(183,234,16,0.88)`;
+            for (let i = 0; i < visible; i++) {
+                const [c, r] = cells[i];
+                ctx.globalAlpha = fadeAlpha;
+                ctx.beginPath();
+                ctx.roundRect(c * CELL, r * CELL, CELL, CELL, 12);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            if (elapsed >= totalMs) {
+                successRef.current = null;
+                pausedRef.current  = false;
+                init();
+            }
+        }
+
         function step(timestamp) {
             rafId = requestAnimationFrame(step);
+
+            // Success animation runs at full frame rate, bypasses tick throttle
+            if (successRef.current) {
+                drawSuccess(timestamp);
+                return;
+            }
+
             if (timestamp - lastTick < TICK_MS) return;
             lastTick = timestamp;
 
@@ -471,12 +553,16 @@ export default function SnakeGame() {
                     if (!inZone(qnc, qnr, fz) && !bodyHit) g.dir = qd;
                     // else: blocked — keep current direction
                 }
-                // Safety: if current direction would hit something, let auto steer us clear
+                // Safety: if current direction leads to zone, body, or a dead end, auto-steer
                 const [cdc, cdr] = DELTA[g.dir];
                 const cnc = ((head.col + cdc) % cols + cols) % cols;
                 const cnr = ((head.row + cdr) % rows + rows) % rows;
                 const bodyAhead = snake.slice(0, -1).some(s => s.col === cnc && s.row === cnr);
-                if (inZone(cnc, cnr, fz) || bodyAhead) {
+                const bodySet   = new Set(snake.slice(0, -1).map(s => `${s.col},${s.row}`));
+                const spaceAhead = (!inZone(cnc, cnr, fz) && !bodyAhead)
+                    ? floodCount(cnc, cnr, cols, rows, fz, bodySet)
+                    : 0;
+                if (inZone(cnc, cnr, fz) || bodyAhead || spaceAhead < snake.length) {
                     g.dir = bestDir(head, target, g.dir, cols, rows, fz, snake);
                 }
             } else {
@@ -506,30 +592,46 @@ export default function SnakeGame() {
             setHeadCell({ col: newHead.col, row: newHead.row });
 
             if (eating && previewRef.current === null) {
-                // Store repositioning so it can be triggered early by a keypress
-                postEatRef.current = () => {
-                    postEatRef.current = null;
-                    const g2 = gRef.current;
-                    if (!g2) return;
-                    const newPos = randomNewPos(g2.cols, g2.rows, g2.fz, g2.snake, g2.projects, eatenIdx);
-                    if (newPos) {
-                        g2.projects[eatenIdx] = { ...eaten, col: newPos.col, row: newPos.row };
-                        setComputed(prev => prev.map(p =>
-                            p.id === eaten.id
-                                ? { ...p, col: newPos.col, row: newPos.row, px: newPos.col * CELL, py: newPos.row * CELL }
-                                : p
-                        ));
-                    }
-                    g2.targetIdx = nearestIdx(g2.snake[0], g2.projects);
-                };
+                eatenThisRoundRef.current.add(eaten.id);
+                setEatenIds(prev => new Set([...prev, eaten.id]));
+                const completedRound = eatenThisRoundRef.current.size >= PROJECTS.length;
 
-                previewRef.current = eaten.id;
-                setPreview(eaten.id);
-                pausedRef.current = true;
-                autoCloseTimerRef.current = setTimeout(() => {
-                    closePreviewRef.current?.();
-                    postEatRef.current?.();
-                }, 3000);
+                if (completedRound) {
+                    // All projects eaten — play success animation then restart
+                    pausedRef.current  = true;
+                    // Pre-shuffle all grid cells for the scatter animation
+                    const allCells = [];
+                    for (let c = 0; c < g.cols; c++)
+                        for (let r = 0; r < g.rows; r++)
+                            allCells.push([c, r]);
+                    for (let i = allCells.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [allCells[i], allCells[j]] = [allCells[j], allCells[i]];
+                    }
+                    successRef.current = { startTime: timestamp, cells: allCells };
+                } else {
+                    // Point to nearest remaining uneaten project
+                    const remaining = g.projects.filter(
+                        p => !eatenThisRoundRef.current.has(p.id)
+                    );
+                    if (remaining.length > 0) {
+                        g.targetIdx = g.projects.indexOf(
+                            remaining.reduce((best, p) => {
+                                const d  = Math.abs(p.col - newHead.col) + Math.abs(p.row - newHead.row);
+                                const bd = Math.abs(best.col - newHead.col) + Math.abs(best.row - newHead.row);
+                                return d < bd ? p : best;
+                            })
+                        );
+                    }
+
+                    // Show preview, resume after 3 s — no repositioning
+                    previewRef.current = eaten.id;
+                    setPreview(eaten.id);
+                    pausedRef.current = true;
+                    autoCloseTimerRef.current = setTimeout(() => {
+                        closePreviewRef.current?.();
+                    }, 3000);
+                }
             }
 
             drawFrame(g.snake, g.projects, g.targetIdx, g.fz, timestamp);
@@ -541,6 +643,12 @@ export default function SnakeGame() {
             W: 'u', S: 'd', A: 'l', D: 'r',
         };
         function handleKey(e) {
+            // Never intercept when the user is typing in a form field
+            const tag = e.target?.tagName?.toLowerCase();
+            if (tag === 'input' || tag === 'textarea') return;
+            // Never intercept modifier-key combos (Ctrl+A, Cmd+Z, etc.)
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
             const d = KEY_MAP[e.key];
             if (!d) return;
             e.preventDefault();
@@ -584,30 +692,32 @@ export default function SnakeGame() {
         <>
             <style>{`
                 @keyframes limeBlob1 {
-                    0%   { transform: translate(0px,    0px)   scale(1);    }
-                    20%  { transform: translate(140px, -100px) scale(1.12); }
-                    45%  { transform: translate(60px,   130px) scale(0.92); }
-                    70%  { transform: translate(-120px,  50px) scale(1.06); }
-                    100% { transform: translate(0px,    0px)   scale(1);    }
+                    0%   { transform: translate(0px,     0px)    scale(1);    }
+                    18%  { transform: translate(260px,  -180px)  scale(1.25); }
+                    42%  { transform: translate(80px,    240px)  scale(0.82); }
+                    68%  { transform: translate(-220px,  100px)  scale(1.18); }
+                    85%  { transform: translate(-80px,  -140px)  scale(0.9);  }
+                    100% { transform: translate(0px,     0px)    scale(1);    }
                 }
                 @keyframes limeBlob2 {
-                    0%   { transform: translate(0px,   0px)    scale(1);    }
-                    30%  { transform: translate(-130px, 80px)  scale(0.88); }
-                    55%  { transform: translate(90px,  -110px) scale(1.14); }
-                    80%  { transform: translate(50px,   60px)  scale(0.96); }
-                    100% { transform: translate(0px,   0px)    scale(1);    }
+                    0%   { transform: translate(0px,    0px)    scale(1);    }
+                    25%  { transform: translate(-240px, 160px)  scale(0.78); }
+                    50%  { transform: translate(180px, -200px)  scale(1.28); }
+                    75%  { transform: translate(120px,  140px)  scale(0.88); }
+                    100% { transform: translate(0px,    0px)    scale(1);    }
                 }
                 @keyframes limeBlob3 {
-                    0%   { transform: translate(0px,   0px)    scale(1);    }
-                    35%  { transform: translate(80px,  150px)  scale(1.08); }
-                    65%  { transform: translate(-100px,-80px)  scale(0.9);  }
-                    100% { transform: translate(0px,   0px)    scale(1);    }
+                    0%   { transform: translate(0px,    0px)    scale(1);    }
+                    30%  { transform: translate(200px,  260px)  scale(1.2);  }
+                    60%  { transform: translate(-180px,-160px)  scale(0.8);  }
+                    80%  { transform: translate(100px, -80px)   scale(1.1);  }
+                    100% { transform: translate(0px,    0px)    scale(1);    }
                 }
                 @keyframes limeBlob4 {
-                    0%   { transform: translate(0px,   0px)   scale(1);    }
-                    40%  { transform: translate(-60px, -120px) scale(1.1);  }
-                    75%  { transform: translate(110px,  70px)  scale(0.93); }
-                    100% { transform: translate(0px,   0px)   scale(1);    }
+                    0%   { transform: translate(0px,    0px)    scale(1);    }
+                    35%  { transform: translate(-200px,-220px)  scale(1.22); }
+                    65%  { transform: translate(240px,  120px)  scale(0.8);  }
+                    100% { transform: translate(0px,    0px)    scale(1);    }
                 }
             `}</style>
 
@@ -621,32 +731,32 @@ export default function SnakeGame() {
             {/* Lime liquid blobs — float beneath the frosted glass grid */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
                 <div style={{
-                    position: 'absolute', width: '60vw', height: '60vh',
-                    left: '5%', top: '50%',
-                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.65) 0%, transparent 70%)',
-                    filter: 'blur(55px)',
-                    animation: 'limeBlob1 9s ease-in-out infinite',
+                    position: 'absolute', width: '60vw', height: '55vh',
+                    left: '-5%', top: '40%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.72) 0%, transparent 65%)',
+                    filter: 'blur(70px)',
+                    animation: 'limeBlob1 8s ease-in-out infinite',
                 }} />
                 <div style={{
-                    position: 'absolute', width: '50vw', height: '50vh',
-                    left: '60%', top: '5%',
-                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.5) 0%, transparent 70%)',
+                    position: 'absolute', width: '55vw', height: '50vh',
+                    left: '45%', top: '-5%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.6) 0%, transparent 65%)',
+                    filter: 'blur(80px)',
+                    animation: 'limeBlob2 11s ease-in-out infinite',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '42vw', height: '45vh',
+                    left: '20%', top: '25%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.45) 0%, transparent 65%)',
+                    filter: 'blur(60px)',
+                    animation: 'limeBlob3 15s ease-in-out infinite',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '40vw', height: '42vh',
+                    left: '60%', top: '50%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.5) 0%, transparent 65%)',
                     filter: 'blur(65px)',
-                    animation: 'limeBlob2 13s ease-in-out infinite',
-                }} />
-                <div style={{
-                    position: 'absolute', width: '35vw', height: '40vh',
-                    left: '35%', top: '35%',
-                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.35) 0%, transparent 70%)',
-                    filter: 'blur(45px)',
-                    animation: 'limeBlob3 17s ease-in-out infinite',
-                }} />
-                <div style={{
-                    position: 'absolute', width: '30vw', height: '35vh',
-                    left: '75%', top: '60%',
-                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.4) 0%, transparent 70%)',
-                    filter: 'blur(50px)',
-                    animation: 'limeBlob4 11s ease-in-out infinite',
+                    animation: 'limeBlob4 10s ease-in-out infinite',
                 }} />
             </div>
 
@@ -670,7 +780,7 @@ export default function SnakeGame() {
 
             {/* Project squares — z-index 20, above form overlay */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 20, pointerEvents: 'none' }}>
-                {computed.map(p => {
+                {computed.filter(p => !eatenIds.has(p.id)).map(p => {
                     const isActive = preview === p.id;
                     const snakeOn  = headCell.col === p.col && headCell.row === p.row;
                     return (

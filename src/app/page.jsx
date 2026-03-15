@@ -331,7 +331,7 @@ export default function Home() {
                             left: 0,
                             width: FORM_W,
                             height: CELL * 4,
-                            padding: CELL,
+                            padding: CELL / 2,
                             boxSizing: 'border-box',
                             background: 'rgba(255, 255, 255, 0.3)',
                             borderRadius: 16,

@@ -229,7 +229,7 @@
     text-align: left;
     view-transition-name: user-brief;
 }
-.mainTextarea::placeholder { color: #767676; }
+.mainTextarea::placeholder { color: #0000002c; }
 
 
 /* Attachments */
