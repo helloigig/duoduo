@@ -127,7 +127,7 @@ export default function Home() {
 
     // Snap form to grid — both horizontally and vertically centered
     const FORM_W = FORM_COLS * CELL; // 560 px
-    const [formSnap, setFormSnap] = useState({ left: 0, top: 0, offsetX: 0 });
+    const [formSnap, setFormSnap] = useState({ left: 0, top: 0, offsetX: 0, btnLeft: 0 });
     useEffect(() => {
         const snap = () => {
             const cols = Math.floor(window.innerWidth / CELL);
@@ -139,7 +139,8 @@ export default function Home() {
             setFormSnap({
                 left: snappedLeft,
                 top: formRow * CELL,
-                offsetX: snappedLeft - naturalLeft, // nudge for flexbox-centered elements
+                offsetX: snappedLeft - naturalLeft,
+                btnLeft: (cols - 3) * CELL, // 2-cell button, 1-cell margin from right
             });
         };
         snap();
@@ -255,7 +256,7 @@ export default function Home() {
                 style={{
                     position: 'fixed',
                     top: CELL,
-                    right: CELL,
+                    left: formSnap.btnLeft,
                     zIndex: 50,
                     fontFamily: 'var(--font-geist-sans), sans-serif',
                     fontSize: 12,
@@ -264,13 +265,16 @@ export default function Home() {
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
                     textDecoration: 'none',
-                    background: '#fff',
-                    width: CELL * 3,
+                    background: 'rgba(255,255,255,0.45)',
+                    backdropFilter: 'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    width: CELL * 2,
                     height: CELL * 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '1px solid #e5e5e5',
+                    border: '1px solid rgba(255,255,255,0.6)',
+                    borderRadius: 12,
                     boxSizing: 'border-box',
                 }}
             >
