@@ -100,9 +100,7 @@
     font-weight: 400;
     letter-spacing: -0.025em;
     line-height: 1.15;
-    margin-bottom: 24px;
     color: #0d0d0d;
-    align-self: center;
 }
 /* ── INTENT */
 .intentRow {
@@ -148,7 +146,7 @@
 .exampleSlide {
     display: inline-block;
     font-style: italic;
-    color: #767676;
+    color: #b7ea10;
     animation: exFlip 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 @keyframes exFlip {
@@ -377,8 +375,8 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    background: #0d0d0d;
-    color: #ffffff;
+    background: #b7ea10;
+    color: #0d0d0d;
     border: none;
     border-radius: 0;
     padding: 9px 20px;
@@ -390,7 +388,7 @@
     cursor: pointer;
     transition: background 0.15s;
 }
-.submitBtn:hover:not(:disabled) { background: #333; }
+.submitBtn:hover:not(:disabled) { background: #a3d30e; }
 .submitBtn:disabled { opacity: 0.22; cursor: not-allowed; }
 .spinner {
     width: 11px;
@@ -796,10 +794,11 @@
     cursor: pointer;
     transition: background 0.15s;
 }
-.ctaPrimary:hover { background: #FF2EDC; }
+.ctaPrimary:hover { background: #b7ea10; color: #0d0d0d; }
 .ctaLhs { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
 .ctaMain { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; }
 .ctaSub { font-size: 9px; font-weight: 400; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; }
+.ctaPrimary:hover .ctaSub { color: rgba(0,0,0,0.5); }
 .ctaArr { font-size: 14px; }
 .ctaSecondary {
     width: 100%;

@@ -8,8 +8,8 @@ import { PROJECTS } from '@/lib/projects';
 const TICK_MS   = 160;
 const SNAKE_LEN = 4;
 const SQ        = 1;    // project square = 1 grid cell
-const MIN_DIST  = 6;    // min cell distance between project squares
-const EDGE      = 2;    // cells clear from viewport edge
+const MIN_DIST  = 2;    // min cell distance between project squares
+const EDGE      = 1;    // cells clear from viewport edge
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const OPP   = { r: 'l', l: 'r', u: 'd', d: 'u' };
@@ -384,7 +384,7 @@ export default function SnakeGame() {
 
             // Extend zone upward to also cover the title above the input box
             const fzBase   = formZoneFor(cols, rows);
-            const fz       = { ...fzBase, r1: Math.max(0, fzBase.r1 - 10) };
+            const fz       = { ...fzBase, r1: Math.max(0, fzBase.r1 - 1) };
             const projects = randomisePositions(cols, rows);
 
             const startCol = Math.floor(cols * 0.12);
@@ -423,17 +423,22 @@ export default function SnakeGame() {
                 ctx.setLineDash([]);
             }
 
-            // ── Snake body ──
+            // ── Snake body — 45×45 rounded squares, corners create natural separation ──
+            const R = 12;
             snake.forEach(({ col, row }) => {
-                ctx.fillStyle = '#E3E3E3';
-                ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
+                ctx.fillStyle = 'rgba(183,234,16,0.3)';
+                ctx.beginPath();
+                ctx.roundRect(col * CELL, row * CELL, CELL, CELL, R);
+                ctx.fill();
             });
 
-            // ── Head — dedicated yellow ──
+            // ── Head — full lime ──
             if (snake.length > 0) {
                 const h = snake[0];
-                ctx.fillStyle = '#F5C518';
-                ctx.fillRect(h.col * CELL, h.row * CELL, CELL, CELL);
+                ctx.fillStyle = 'rgba(183,234,16,1)';
+                ctx.beginPath();
+                ctx.roundRect(h.col * CELL, h.row * CELL, CELL, CELL, R);
+                ctx.fill();
             }
         }
 
@@ -577,22 +582,84 @@ export default function SnakeGame() {
 
     return (
         <>
-            {/* CSS grid background — avoids Hermann grid illusion from canvas stroke intersections */}
+            <style>{`
+                @keyframes limeBlob1 {
+                    0%   { transform: translate(0px,    0px)   scale(1);    }
+                    20%  { transform: translate(140px, -100px) scale(1.12); }
+                    45%  { transform: translate(60px,   130px) scale(0.92); }
+                    70%  { transform: translate(-120px,  50px) scale(1.06); }
+                    100% { transform: translate(0px,    0px)   scale(1);    }
+                }
+                @keyframes limeBlob2 {
+                    0%   { transform: translate(0px,   0px)    scale(1);    }
+                    30%  { transform: translate(-130px, 80px)  scale(0.88); }
+                    55%  { transform: translate(90px,  -110px) scale(1.14); }
+                    80%  { transform: translate(50px,   60px)  scale(0.96); }
+                    100% { transform: translate(0px,   0px)    scale(1);    }
+                }
+                @keyframes limeBlob3 {
+                    0%   { transform: translate(0px,   0px)    scale(1);    }
+                    35%  { transform: translate(80px,  150px)  scale(1.08); }
+                    65%  { transform: translate(-100px,-80px)  scale(0.9);  }
+                    100% { transform: translate(0px,   0px)    scale(1);    }
+                }
+                @keyframes limeBlob4 {
+                    0%   { transform: translate(0px,   0px)   scale(1);    }
+                    40%  { transform: translate(-60px, -120px) scale(1.1);  }
+                    75%  { transform: translate(110px,  70px)  scale(0.93); }
+                    100% { transform: translate(0px,   0px)   scale(1);    }
+                }
+            `}</style>
+
+            {/* Solid gray base */}
             <div style={{
                 position: 'fixed', inset: 0, zIndex: 0,
-                background: '#F2F2F2',
-                backgroundImage: [
-                    `linear-gradient(#E3E3E3 1px, transparent 1px)`,
-                    `linear-gradient(90deg, #E3E3E3 1px, transparent 1px)`,
-                ].join(', '),
-                backgroundSize: `${CELL}px ${CELL}px`,
+                background: '#F0F0F0',
                 pointerEvents: 'none',
             }} />
 
-            {/* Radial vignette — fades edges to draw focus to center */}
+            {/* Lime liquid blobs — float beneath the frosted glass grid */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+                <div style={{
+                    position: 'absolute', width: '60vw', height: '60vh',
+                    left: '5%', top: '50%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.65) 0%, transparent 70%)',
+                    filter: 'blur(55px)',
+                    animation: 'limeBlob1 9s ease-in-out infinite',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '50vw', height: '50vh',
+                    left: '60%', top: '5%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.5) 0%, transparent 70%)',
+                    filter: 'blur(65px)',
+                    animation: 'limeBlob2 13s ease-in-out infinite',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '35vw', height: '40vh',
+                    left: '35%', top: '35%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.35) 0%, transparent 70%)',
+                    filter: 'blur(45px)',
+                    animation: 'limeBlob3 17s ease-in-out infinite',
+                }} />
+                <div style={{
+                    position: 'absolute', width: '30vw', height: '35vh',
+                    left: '75%', top: '60%',
+                    background: 'radial-gradient(ellipse, rgba(183,234,16,0.4) 0%, transparent 70%)',
+                    filter: 'blur(50px)',
+                    animation: 'limeBlob4 11s ease-in-out infinite',
+                }} />
+            </div>
+
+            {/* Frosted glass cells — backdrop-filter masked to rounded rects */}
             <div style={{
                 position: 'fixed', inset: 0, zIndex: 0,
-                background: 'radial-gradient(ellipse 60% 50% at 50% 50%, transparent 0%, rgba(242,242,242,0.85) 100%)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                background: 'rgba(255,255,255,0.25)',
+                WebkitMaskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CELL}' height='${CELL}'%3E%3Crect x='0' y='0' width='${CELL}' height='${CELL}' rx='12' ry='12' fill='white'/%3E%3C/svg%3E")`,
+                maskImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='${CELL}' height='${CELL}'%3E%3Crect x='0' y='0' width='${CELL}' height='${CELL}' rx='12' ry='12' fill='white'/%3E%3C/svg%3E")`,
+                WebkitMaskSize: `${CELL}px ${CELL}px`,
+                maskSize: `${CELL}px ${CELL}px`,
                 pointerEvents: 'none',
             }} />
 
@@ -612,16 +679,20 @@ export default function SnakeGame() {
                             onMouseEnter={() => handleSquareHover(p.id)}
                             onMouseLeave={handleSquareLeave}
                             style={{
-                                position:        'absolute',
-                                left:            p.px,
-                                top:             p.py,
-                                width:           CELL,
-                                height:          CELL,
-                                backgroundColor: '#E3E3E3',
-                                cursor:          'pointer',
-                                pointerEvents:   'auto',
-                                opacity:         snakeOn ? 0 : isActive ? 0.6 : 1,
-                                transition:      'opacity 0.15s',
+                                position:          'absolute',
+                                left:              p.px,
+                                top:               p.py,
+                                width:             CELL,
+                                height:            CELL,
+                                background:        'rgba(232, 247, 119, 0.45)',
+                                borderRadius:      12,
+                                backdropFilter:    'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)',
+                                boxShadow:         'inset 0 0 16px rgba(183,234,16,0.55)',
+                                cursor:            'pointer',
+                                pointerEvents:     'auto',
+                                opacity:           snakeOn ? 0 : isActive ? 0.5 : 1,
+                                transition:        'opacity 0.15s',
                             }}
                         />
                     );

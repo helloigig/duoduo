@@ -244,7 +244,7 @@ export default function Home() {
 
     // ── RENDER ────────────────────────────────────────────────────────────────
     return (
-        <div style={{ position: 'relative', width: '100vw', height: '100svh', overflow: 'hidden', background: '#F2F2F2' }}>
+        <div style={{ position: 'relative', width: '100vw', height: '100svh', overflow: 'hidden', background: '#F0F0F0' }}>
 
             {/* ── BACKGROUND: snake game ── */}
             <SnakeGame />
@@ -265,8 +265,8 @@ export default function Home() {
                     textTransform: 'uppercase',
                     textDecoration: 'none',
                     background: '#fff',
-                    width: CELL * 8,
-                    height: CELL * 2,
+                    width: CELL * 3,
+                    height: CELL * 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -295,22 +295,26 @@ export default function Home() {
                 {/* Form — hidden after submit */}
                 {!result && !loading && !followup && (
                     <>
+                        {/* Wrapper covers the full 8-cell zone; children are absolutely positioned inside */}
                         <div style={{
                             position: 'absolute',
                             left: formSnap.left,
-                            top: formSnap.top - CELL * 5,
+                            top: formSnap.top,
                             width: FORM_W,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 20,
+                            height: CELL * 8,
                         }}>
                         <h1
                             className={aboutStyles.pageTitle}
                             style={{
-                                color: '#0d0d0d',
-                                textAlign: 'center',
+                                position: 'absolute',
+                                bottom: CELL * 5,   /* bottom edge sits at row 3; form box top is row 4 → 1 cell gap */
+                                left: 0,
+                                right: 0,
                                 margin: 0,
-                                padding: `0 ${CELL * 3}px`,
+                                padding: `0 ${CELL}px`,
+                                boxSizing: 'border-box',
+                                textAlign: 'center',
+                                color: '#0d0d0d',
                             }}
                         >
                             How could <TitleDuoduo /> help with{' '}
@@ -322,18 +326,22 @@ export default function Home() {
                         </h1>
 
                         <div style={{
+                            position: 'absolute',
+                            top: CELL * 4,
+                            left: 0,
                             width: FORM_W,
-                            height: CELL * 12,
-                            background: '#F2F2F2',
+                            height: CELL * 4,
                             padding: CELL,
                             boxSizing: 'border-box',
-                            borderTop: '1px solid #E3E3E3',
-                            borderLeft: '1px solid #E3E3E3',
+                            background: 'rgba(255, 255, 255, 0.3)',
+                            borderRadius: 16,
+                            backdropFilter: 'blur(5px)',
+                            WebkitBackdropFilter: 'blur(5px)',
                         }}>
                         <div className={aboutStyles.formField}>
                             <textarea
                                 className={aboutStyles.mainTextarea}
-                                style={{ height: 7 * CELL }}
+                                style={{ height: 2 * CELL }}
                                 value={mainInput}
                                 onChange={(e) => setMainInput(e.target.value)}
                                 onKeyDown={handleMainKeyDown}
@@ -364,7 +372,7 @@ export default function Home() {
                             {submittedText}
                         </blockquote>
                         <div className={aboutStyles.loading}>
-                            <AvatarAni className={aboutStyles.loadingAvatar} style={{ color: '#FF2EDC' }} />
+                            <AvatarAni className={aboutStyles.loadingAvatar} style={{ color: '#0d0d0d' }} />
                             <div key={loadingMsgIdx} className={aboutStyles.loadingMsg}>
                                 {LOADING_MSGS[loadingMsgIdx % LOADING_MSGS.length]}
                             </div>
