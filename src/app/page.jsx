@@ -6,6 +6,14 @@ import Brief from '@/components/Brief';
 import '@/styles/site.css';
 
 const tagById = Object.fromEntries(SITE.tags.map((t) => [t.id, t]));
+const slug = (s) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const ALL = [
+    ...SITE.selected.map((p) => ({ ...p, group: 'selected', key: slug(p.title) })),
+    ...SITE.archive.map((p) => ({ ...p, group: 'archive', key: slug(p.title) })),
+];
+const isMobile = () => window.matchMedia('(max-width: 767px)').matches;
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const openCall = (e) => {
     e?.preventDefault();
     window.dispatchEvent(new CustomEvent('open-cal'));
@@ -19,24 +27,63 @@ function Highlighted({ text }) {
 }
 
 function Dots({ tags }) {
+    const label = tags.map((id) => tagById[id]?.label).join(', ');
     return (
-        <span className="dots" aria-label={tags.map((id) => tagById[id]?.label).join(', ')}>
+        <span className="dots" role="img" aria-label={label} title={label}>
             {tags.map((id) => <i key={id} style={{ '--c': tagById[id]?.color }} />)}
         </span>
     );
 }
 
-function Gallery({ project }) {
+function Tile({ img, alt, className = 'tile' }) {
+    const [loaded, setLoaded] = useState(false);
+    return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+            className={`${className}${loaded ? ' is-loaded' : ''}`}
+            src={img.src}
+            alt={alt}
+            style={{ aspectRatio: img.ratio }}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            onLoad={() => setLoaded(true)}
+            ref={(el) => { if (el?.complete && el.naturalWidth && !loaded) setLoaded(true); }}
+        />
+    );
+}
+
+function Gallery({ project, onOpenImage }) {
     const ref = useRef(null);
+    const dragged = useRef(false);
+    const [edges, setEdges] = useState({ start: true, end: false });
     const images = project.images || [];
 
-    // Drag to scroll with a mouse
+    const updateEdges = useCallback(() => {
+        const g = ref.current;
+        if (!g) return;
+        setEdges({ start: g.scrollLeft <= 4, end: g.scrollLeft + g.clientWidth >= g.scrollWidth - 4 });
+    }, []);
+
+    useEffect(() => {
+        updateEdges();
+        const g = ref.current;
+        const ro = new ResizeObserver(updateEdges);
+        if (g) ro.observe(g);
+        return () => ro.disconnect();
+    }, [updateEdges]);
+
+    // Drag to scroll with a mouse; a drag never counts as a click
     const onPointerDown = (e) => {
         const g = ref.current;
-        if (!g || e.pointerType !== 'mouse') return;
+        if (!g || e.pointerType !== 'mouse' || e.button !== 0) return;
         const x0 = e.clientX, s0 = g.scrollLeft;
-        g.classList.add('is-dragging');
-        const move = (ev) => { g.scrollLeft = s0 - (ev.clientX - x0); };
+        dragged.current = false;
+        const move = (ev) => {
+            const dx = ev.clientX - x0;
+            if (Math.abs(dx) > 5) { dragged.current = true; g.classList.add('is-dragging'); }
+            if (dragged.current) g.scrollLeft = s0 - dx;
+        };
         const up = () => {
             g.classList.remove('is-dragging');
             window.removeEventListener('pointermove', move);
@@ -46,41 +93,67 @@ function Gallery({ project }) {
         window.addEventListener('pointerup', up);
     };
 
+    const page = (dir) => {
+        const g = ref.current;
+        if (g) g.scrollBy({ left: dir * g.clientWidth * 0.8, behavior: reducedMotion() ? 'auto' : 'smooth' });
+    };
+
     return (
-        <div className="gallery" ref={ref} onPointerDown={onPointerDown}>
-            {images.map((img, i) => (
-                <figure key={img.src}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        className="tile"
-                        src={img.src}
-                        alt={`${project.title}, image ${i + 1}`}
-                        style={{ aspectRatio: img.ratio }}
-                        loading="lazy"
-                        decoding="async"
-                        draggable={false}
-                    />
-                    <figcaption className="h3">{i + 1}/{images.length}</figcaption>
-                </figure>
-            ))}
+        <div className="gallery-wrap">
+            <div
+                className="gallery"
+                ref={ref}
+                onPointerDown={onPointerDown}
+                onScroll={updateEdges}
+                onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight') { e.preventDefault(); page(1); }
+                    if (e.key === 'ArrowLeft') { e.preventDefault(); page(-1); }
+                }}
+                tabIndex={0}
+                role="group"
+                aria-label={`${project.title} images`}
+            >
+                {images.map((img, i) => (
+                    <figure key={img.src}>
+                        <button
+                            type="button"
+                            className="tile-btn"
+                            onClick={() => { if (!dragged.current) onOpenImage(i); }}
+                            aria-label={`Open ${project.title} image ${i + 1} full screen`}
+                        >
+                            <Tile img={img} alt={`${project.title}, image ${i + 1}`} />
+                        </button>
+                        <figcaption className="h3">{i + 1}/{images.length}</figcaption>
+                    </figure>
+                ))}
+            </div>
+            {images.length > 1 && (
+                <>
+                    <button type="button" className="gallery__nav gallery__nav--prev h3" onClick={() => page(-1)} hidden={edges.start} aria-label="Previous images">←</button>
+                    <button type="button" className="gallery__nav gallery__nav--next h3" onClick={() => page(1)} hidden={edges.end} aria-label="Next images">→</button>
+                </>
+            )}
         </div>
     );
 }
 
-function Row({ project, open, onToggle, onPopOut, hidden }) {
-    const id = `p-${project.title.replace(/\W+/g, '-').toLowerCase()}`;
+function Row({ project, open, onToggle, onOpenImage, hidden }) {
+    const id = `panel-${project.key}`;
     const showClient = project.client && project.client !== project.title;
     return (
-        <li className={`row${open ? ' is-open' : ''}`} hidden={hidden}>
+        <li className={`row${open ? ' is-open' : ''}`} hidden={hidden} id={project.key} data-key={project.key}>
             <button className="row__btn h2" type="button" aria-expanded={open} aria-controls={id} onClick={onToggle}>
                 <span className="row__name"><span>{project.title}</span><Dots tags={project.tags} /></span>
                 <span className="row__client">{showClient ? project.client : ''}</span>
-                <span className="row__years">{project.years}</span>
+                <span className="row__years">
+                    {project.years}
+                    <span className="row__toggle" aria-hidden="true">{open ? '−' : '+'}</span>
+                </span>
             </button>
             <div className="row__panel" id={id} inert={!open}>
                 <div className="row__inner">
                     <div className="row__content">
-                        {project.images?.length ? <Gallery project={project} /> : null}
+                        {project.images?.length ? <Gallery project={project} onOpenImage={onOpenImage} /> : null}
                         <div className="details">
                             <div className="meta">
                                 <span className="h3 meta__disc">{project.disciplines}</span>
@@ -97,7 +170,7 @@ function Row({ project, open, onToggle, onPopOut, hidden }) {
                             </div>
                             {project.description ? <p className="h2 desc">{project.description}</p> : null}
                             {project.images?.length ? (
-                                <button className="popout h3" type="button" onClick={onPopOut}>
+                                <button className="popout h3" type="button" onClick={() => onOpenImage(0)}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src="/pop-out.svg" alt="" width={16} height={15} />Pop out
                                 </button>
@@ -110,23 +183,63 @@ function Row({ project, open, onToggle, onPopOut, hidden }) {
     );
 }
 
-function Lightbox({ project, onClose }) {
+function Lightbox({ view, onClose }) {
     const ref = useRef(null);
+    const trackRef = useRef(null);
+    const [index, setIndex] = useState(0);
+    const project = view?.project;
+    const count = project?.images.length || 0;
+
+    const goTo = useCallback((i, smooth = true) => {
+        const t = trackRef.current;
+        const item = t?.children[i];
+        if (!item) return;
+        t.scrollTo({ left: item.offsetLeft - t.offsetLeft - 12, behavior: smooth && !reducedMotion() ? 'smooth' : 'auto' });
+    }, []);
+
     useEffect(() => {
         const d = ref.current;
-        if (project && d && !d.open) d.showModal();
-        if (!project && d?.open) d.close();
-    }, [project]);
+        if (view && d && !d.open) {
+            d.showModal();
+            requestAnimationFrame(() => { setIndex(view.index); goTo(view.index, false); });
+        }
+        if (!view && d?.open) d.close();
+    }, [view, goTo]);
+
+    // Track which image is in view for the counter
+    const onScroll = () => {
+        const t = trackRef.current;
+        if (!t) return;
+        const mid = t.scrollLeft + t.clientWidth / 3;
+        let i = 0;
+        [...t.children].forEach((c, n) => { if (c.offsetLeft - t.offsetLeft <= mid) i = n; });
+        setIndex(i);
+    };
+
+    const onKeyDown = (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(Math.min(index + 1, count - 1)); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(Math.max(index - 1, 0)); }
+    };
+
     return (
         <dialog
             className="lightbox"
             ref={ref}
-            aria-label="Image gallery"
+            aria-label={project ? `${project.title} images` : 'Images'}
             onClose={onClose}
+            onKeyDown={onKeyDown}
             onClick={(e) => e.target === ref.current && onClose()}
         >
-            <button className="lightbox__close h3" type="button" onClick={onClose}>Close</button>
-            <div className="lightbox__track">
+            <div className="lightbox__bar">
+                <span className="h3">{project?.title}</span>
+                <span className="h3 muted" aria-live="polite">{count ? `${index + 1}/${count}` : ''}</span>
+                <span className="lightbox__actions">
+                    <button className="h3" type="button" onClick={() => goTo(Math.max(index - 1, 0))} disabled={index === 0} aria-label="Previous image">←</button>
+                    <button className="h3" type="button" onClick={() => goTo(Math.min(index + 1, count - 1))} disabled={index >= count - 1} aria-label="Next image">→</button>
+                    <button className="h3" type="button" onClick={onClose}>Close</button>
+                </span>
+            </div>
+            <div className="lightbox__track" ref={trackRef} onScroll={onScroll}>
                 {project?.images.map((img, i) =>
                     img.full ? (
                         <div className="lightbox__long" key={img.src}>
@@ -135,7 +248,7 @@ function Lightbox({ project, onClose }) {
                         </div>
                     ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img key={img.src} className="tile" src={img.src} alt={`${project.title}, image ${i + 1}`} style={{ aspectRatio: img.ratio }} />
+                        <img key={img.src} className="tile is-loaded" src={img.src} alt={`${project.title}, image ${i + 1}`} style={{ aspectRatio: img.ratio }} />
                     )
                 )}
             </div>
@@ -146,11 +259,12 @@ function Lightbox({ project, onClose }) {
 export default function Home() {
     const [openKey, setOpenKey] = useState(null);
     const [active, setActive] = useState([]);
-    const [popOut, setPopOut] = useState(null);
+    const [lightbox, setLightbox] = useState(null);
     const [headerOn, setHeaderOn] = useState(false);
     const listRef = useRef(null);
     const introRef = useRef(null);
     const rootRef = useRef(null);
+    const sheetRef = useRef(null);
 
     // Desktop header slides in once the list covers the intro
     useEffect(() => {
@@ -171,24 +285,72 @@ export default function Home() {
         return () => ro.disconnect();
     }, []);
 
+    // After a row opens (and any other row has finished closing), bring it into view
+    const reveal = useCallback((key) => {
+        setTimeout(() => {
+            const row = document.getElementById(key);
+            if (!row) return;
+            const top = row.getBoundingClientRect().top;
+            const minTop = isMobile() ? 65 : 58;
+            if (top < minTop || top > window.innerHeight * 0.45) {
+                const behavior = reducedMotion() ? 'auto' : 'smooth';
+                if (isMobile() && sheetRef.current) {
+                    sheetRef.current.scrollBy({ top: top - minTop, behavior });
+                } else {
+                    window.scrollBy({ top: top - minTop, behavior });
+                }
+            }
+        }, 480);
+    }, []);
+
+    const toggle = (key) => {
+        const next = openKey === key ? null : key;
+        setOpenKey(next);
+        history.replaceState(null, '', next ? `#${next}` : location.pathname + location.search);
+        if (next) reveal(next);
+    };
+
+    // Open a project from the URL (#basecamp-research)
+    useEffect(() => {
+        const fromHash = () => {
+            const key = decodeURIComponent(location.hash.slice(1));
+            if (!key || !ALL.some((p) => p.key === key)) return;
+            setOpenKey(key);
+            reveal(key);
+        };
+        const id = setTimeout(fromHash, 0);
+        window.addEventListener('hashchange', fromHash);
+        return () => { clearTimeout(id); window.removeEventListener('hashchange', fromHash); };
+    }, [reveal]);
+
     const toggleTag = (id) => setActive((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
     const isHidden = (p) => active.length > 0 && !active.some((a) => p.tags.includes(a));
-    const closePopOut = useCallback(() => setPopOut(null), []);
+    const closeLightbox = useCallback(() => setLightbox(null), []);
 
-    const list = (projects, group) =>
-        projects.map((p, i) => {
-            const key = `${group}-${i}`;
-            return (
-                <Row
-                    key={key}
-                    project={p}
-                    open={openKey === key}
-                    hidden={isHidden(p)}
-                    onToggle={() => setOpenKey((k) => (k === key ? null : key))}
-                    onPopOut={() => setPopOut(p)}
-                />
-            );
-        });
+    const list = (group) => {
+        const projects = ALL.filter((p) => p.group === group);
+        const visible = projects.filter((p) => !isHidden(p)).length;
+        return (
+            <ul className="projects">
+                {projects.map((p) => (
+                    <Row
+                        key={p.key}
+                        project={p}
+                        open={openKey === p.key}
+                        hidden={isHidden(p)}
+                        onToggle={() => toggle(p.key)}
+                        onOpenImage={(index) => setLightbox({ project: p, index })}
+                    />
+                ))}
+                {visible === 0 && (
+                    <li className="row row--empty">
+                        <span className="h2 muted">Nothing here under {active.map((a) => tagById[a].label).join(' or ')}.</span>
+                        <button className="h3" type="button" onClick={() => setActive([])}>Clear filter</button>
+                    </li>
+                )}
+            </ul>
+        );
+    };
 
     return (
         <div className="dd" ref={rootRef}>
@@ -203,7 +365,7 @@ export default function Home() {
                     <p className="h1" ref={introRef}><Highlighted text={SITE.intro} /></p>
                 </section>
 
-                <div className="sheet">
+                <div className="sheet" ref={sheetRef}>
                     <div className="sheet__spacer" aria-hidden="true" />
                     <section className="list" ref={listRef} aria-labelledby="selected-title">
                         <div className="list__head">
@@ -221,14 +383,17 @@ export default function Home() {
                                         {t.label}
                                     </button>
                                 ))}
+                                {active.length > 0 && (
+                                    <button className="tags__clear h3 muted" type="button" onClick={() => setActive([])}>Clear</button>
+                                )}
                             </div>
                         </div>
-                        <ul className="projects">{list(SITE.selected, 's')}</ul>
+                        {list('selected')}
 
                         <div className="list__head list__head--archive">
                             <h2 className="h3">Project archive (newest to oldest)</h2>
                         </div>
-                        <ul className="projects">{list(SITE.archive, 'a')}</ul>
+                        {list('archive')}
 
                         <Brief onBookCall={openCall} />
 
@@ -240,7 +405,7 @@ export default function Home() {
                 </div>
             </main>
 
-            <Lightbox project={popOut} onClose={closePopOut} />
+            <Lightbox view={lightbox} onClose={closeLightbox} />
         </div>
     );
 }
