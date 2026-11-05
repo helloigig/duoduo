@@ -21,8 +21,16 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata = {
-  title: "DuoDuo Studio",
-  description: "High-End Portfolio",
+  metadataBase: new URL("https://www.duoduo.global"),
+  title: "duoduo — Product Engineering Studio",
+  description:
+    "duoduo is a product engineering studio founded by two designers who also write production code, carrying products from brand and experience through to launch.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: "duoduo — Product Engineering Studio",
+    url: "https://www.duoduo.global/",
+    siteName: "duoduo",
+  },
 };
 
 export default function RootLayout({ children }) {
