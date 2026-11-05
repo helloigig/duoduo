@@ -26,14 +26,16 @@ export const SITE = {
     "which gives the studio a refined visual sensibility alongside rigorous structural thinking, so every product we deliver is " +
     "both considered in its craft and clear in its logic.",
 
-  // Filter categories, from the projects' scopes. Tag order = dot order; colours are the Figma "pops" plus one violet.
+  // Filter categories, from the projects' scopes. Tag order = dot order.
+  // duoduo palette: magenta from the studio's pink avatar, then ultramarine, emerald, violet,
+  // burnt orange and vermilion — all ≥ 4.5:1 contrast on the off-white page, so 10px labels stay legible.
   tags: [
-    { id: "brand", label: "Brand", color: "#C7578F" },
-    { id: "website", label: "Website", color: "#235789" },
-    { id: "app", label: "App", color: "#28A472" },
-    { id: "product", label: "Product UI", color: "#7A5CC2" },
-    { id: "print", label: "Print", color: "#F5A300" },
-    { id: "illustration", label: "Illustration", color: "#C1292E" },
+    { id: "brand", label: "Brand", color: "#C21F8A" },
+    { id: "website", label: "Website", color: "#2B45D4" },
+    { id: "app", label: "App", color: "#0A7A5C" },
+    { id: "product", label: "Product UI", color: "#6B3FC9" },
+    { id: "print", label: "Print", color: "#B8500F" },
+    { id: "illustration", label: "Illustration", color: "#C8322B" },
   ],
 
   // images: { src, ratio (w/h), full? (long page shown by Pop out) }
