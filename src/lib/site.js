@@ -192,3 +192,29 @@ export const SITE = {
     },
   ],
 };
+
+// ── Derived data shared by the homepage, project pages, sitemap and llms.txt ──
+export const slugify = (s) =>
+  s.toLowerCase().replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+export const PROJECTS = [
+  ...SITE.selected.map((p) => ({ ...p, group: "selected", key: slugify(p.title) })),
+  ...SITE.archive.map((p) => ({ ...p, group: "archive", key: slugify(p.title) })),
+];
+
+export const projectBySlug = (key) => PROJECTS.find((p) => p.key === key);
+export const tagLabel = (id) => SITE.tags.find((t) => t.id === id)?.label ?? id;
+
+// Founders and places, used in structured data (from the live duoduo.global copy)
+export const STUDIO = {
+  founders: ["Gigi", "Kiwi"],
+  locations: ["London", "Shenzhen"],
+  services: [
+    "Product design",
+    "Brand identity",
+    "UI/UX design",
+    "Website design",
+    "Front-end engineering",
+    "App design",
+  ],
+};

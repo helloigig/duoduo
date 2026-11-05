@@ -1,16 +1,44 @@
 'use client';
 
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { SITE } from '@/lib/site';
+import Link from 'next/link';
+import { SITE, PROJECTS, STUDIO } from '@/lib/site';
 import Brief from '@/components/Brief';
 import '@/styles/site.css';
 
+const base = SITE.url.replace(/\/$/, '');
+// Structured data: who the studio is and what it has made (read by search and AI answer engines)
+const STUDIO_LD = {
+    '@context': 'https://schema.org',
+    '@graph': [
+        {
+            '@type': ['Organization', 'ProfessionalService'],
+            '@id': `${SITE.url}#studio`,
+            name: SITE.name,
+            url: SITE.url,
+            description: SITE.intro.replace(/[[\]]/g, ''),
+            slogan: SITE.role,
+            founder: STUDIO.founders.map((name) => ({ '@type': 'Person', name })),
+            areaServed: 'Worldwide',
+            location: STUDIO.locations.map((addressLocality) => ({ '@type': 'Place', address: { '@type': 'PostalAddress', addressLocality } })),
+            knowsAbout: STUDIO.services,
+            hasOfferCatalog: {
+                '@type': 'OfferCatalog',
+                name: 'Services',
+                itemListElement: STUDIO.services.map((name) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name } })),
+            },
+        },
+        { '@type': 'WebSite', '@id': `${SITE.url}#site`, url: SITE.url, name: SITE.name, publisher: { '@id': `${SITE.url}#studio` } },
+        {
+            '@type': 'ItemList',
+            name: 'duoduo projects',
+            itemListElement: PROJECTS.map((p, i) => ({ '@type': 'ListItem', position: i + 1, url: `${base}/work/${p.key}`, name: p.title })),
+        },
+    ],
+};
+
 const tagById = Object.fromEntries(SITE.tags.map((t) => [t.id, t]));
-const slug = (s) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const ALL = [
-    ...SITE.selected.map((p) => ({ ...p, group: 'selected', key: slug(p.title) })),
-    ...SITE.archive.map((p) => ({ ...p, group: 'archive', key: slug(p.title) })),
-];
+const ALL = PROJECTS;
 let revealIO = null;
 const observeReveal = (el) => {
     if (!el || typeof window === 'undefined' || !document.querySelector('.dd.js-motion')) return;
@@ -226,6 +254,7 @@ function Row({ project, open, onToggle, onOpenImage, hidden, index }) {
                                 <span className="h3">{project.disciplines}</span>
                             </div>
                             <div className="details__meta">
+                                <Link className="h3 details__more" href={`/work/${project.key}`}>View project →</Link>
                                 {project.links?.length ? (
                                     <>
                                         <span className="h3 muted">Links</span>
@@ -444,6 +473,7 @@ export default function Home() {
 
     return (
         <div className="dd" ref={rootRef}>
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(STUDIO_LD) }} />
             <header className={`site-header${headerOn ? ' is-visible' : ''}`} aria-hidden={!headerOn}>
                 <a className="h2" href="#top" tabIndex={headerOn ? 0 : -1}>{SITE.name}</a>
                 <span className="h2 muted site-header__role">{SITE.role}</span>
@@ -452,7 +482,7 @@ export default function Home() {
 
             <main id="top">
                 <section className="intro">
-                    <p className="h1" ref={introRef}><Highlighted text={SITE.intro} /></p>
+                    <h1 className="h1" ref={introRef}><Highlighted text={SITE.intro} /></h1>
                 </section>
 
                 <div className="sheet" ref={sheetRef}>
