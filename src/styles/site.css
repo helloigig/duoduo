@@ -115,13 +115,7 @@ body:has(.dd) [class*="PageShell_shell"] { height: auto; }
 .dd .tile { height: var(--gallery-h); background: var(--tile); object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; }
 
 .dd .details { padding-left: var(--pad); display: flex; flex-direction: column; gap: 12px; }
-.dd .meta { display: flex; align-items: flex-start; gap: 10px; }
-.dd .meta__disc { width: 228px; flex: none; }
-.dd .links { display: flex; gap: 12px; flex-wrap: wrap; }
-.dd .links a { color: var(--off-black); }
 .dd .desc { max-width: 705px; }
-.dd .popout { display: inline-flex; align-items: center; gap: 6px; color: var(--off-black); align-self: flex-start; }
-.dd .popout img { width: 16px; height: 15.5px; }
 
 /* Lightbox */
 .dd .lightbox {
@@ -189,12 +183,7 @@ body:has(.dd) [class*="PageShell_shell"] { height: auto; }
   .dd .row.is-open .row__content { padding-top: 12px; }
   .dd .row__content { gap: 6px; }
   .dd .details { padding-right: var(--pad); gap: 18px; padding-top: 6px; }
-  .dd .meta { flex-direction: column; gap: 12px; order: 2; }
-  .dd .meta__disc { display: none; }
-  .dd .links { gap: 24px; }
-  .dd .desc { order: 1; }
-  .dd .popout { display: none; }
-}
+        }
 
 @media (prefers-reduced-motion: reduce) {
   .dd *, .dd *::before, .dd *::after { transition: none !important; animation: none !important; }
@@ -262,4 +251,92 @@ body:has(.dd) [class*="PageShell_shell"] { height: auto; }
   .dd .brief__result > div { grid-template-columns: 1fr; gap: 6px; }
   .dd .brief__body { gap: 14px; }
   .dd .brief__hint { visibility: hidden; }
+}
+
+/* ───────── Refinement pass: calmer layout, one image size, motion ───────── */
+
+/* Subtle header: small type on a translucent bar, same columns as the rows */
+.dd .site-header {
+  height: 44px; padding: 0 var(--pad); align-items: center;
+  grid-template-columns: minmax(0, 715fr) minmax(0, 477fr) minmax(0, 228fr);
+  background: rgba(247, 247, 247, 0.82);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px);
+}
+.dd .site-header > :last-child { padding-right: 0; }
+
+/* Every tile is the same 4:3 frame (images are pre-composed to 1600×1200) */
+.dd .tile { aspect-ratio: 4 / 3; width: auto; object-fit: cover; }
+.dd .tile-btn { border-radius: 2px; overflow: hidden; }
+.dd .tile-btn .tile { transition: opacity 0.4s var(--ease), transform 0.6s var(--ease); }
+.dd .tile-btn:hover .tile { transform: scale(1.015); }
+.dd .lightbox__track .tile--natural { aspect-ratio: auto; width: auto; }
+
+/* Details sit on the row grid: description under the name, scope under the client */
+.dd .details {
+  display: grid; padding: 6px var(--pad) 6px;
+  grid-template-columns: minmax(0, 715fr) minmax(0, 477fr) minmax(0, 228fr);
+  gap: 0; align-items: start;
+}
+.dd .details .desc { max-width: 640px; padding-right: 24px; }
+.dd .details__meta { display: flex; flex-direction: column; gap: 6px; padding-top: 3px; }
+.dd .details__meta a { color: var(--off-black); }
+
+/* Dots spread a touch on hover */
+.dd .dots i { transition: transform 0.3s var(--ease); }
+.dd .row__btn:hover .dots i:nth-child(1) { transform: translateX(-1px); }
+.dd .row__btn:hover .dots i:nth-child(n+3) { transform: translateX(1px); }
+.dd .row__btn:hover .dots i:nth-child(n+4) { transform: translateX(2px); }
+
+/* Hover preview card (desktop) */
+.dd .hover-preview {
+  position: fixed; left: 0; top: 0; z-index: 20; pointer-events: none;
+  width: 260px; aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden;
+  background: #ececec; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+  opacity: 0; scale: 0.92; transition: opacity 0.25s var(--ease), scale 0.35s var(--ease);
+}
+.dd .hover-preview.is-on { opacity: 1; scale: 1; }
+.dd .hover-preview img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 0.25s var(--ease);
+}
+.dd .hover-preview img.is-active { opacity: 1; }
+@media (hover: none), (max-width: 767px) { .dd .hover-preview { display: none; } }
+
+/* Intro: words rise in on load, then recede as the list slides over */
+.dd .intro p { transform-origin: 0 0; transition: none; }
+.dd .intro p {
+  opacity: calc(1 - var(--intro-p, 0) * 0.65);
+  transform: translateY(calc(var(--intro-p, 0) * -28px)) scale(calc(1 - var(--intro-p, 0) * 0.02));
+  filter: blur(calc(var(--intro-p, 0) * 1.5px));
+}
+.dd .intro .w { display: inline-block; animation: word-in 0.9s var(--ease) both; animation-delay: calc(min(var(--i), 70) * 14ms); }
+@keyframes word-in { from { opacity: 0; transform: translateY(0.35em); filter: blur(4px); } }
+
+/* Rows and sections fade up as they enter (only with JS running) */
+.dd.js-motion .row:not([data-in]), .dd.js-motion .list__head:not([data-in]),
+.dd.js-motion .brief:not([data-in]), .dd.js-motion .list__foot:not([data-in]) { opacity: 0; transform: translateY(14px); }
+.dd.js-motion .row, .dd.js-motion .list__head, .dd.js-motion .brief, .dd.js-motion .list__foot {
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+  transition-delay: calc(min(var(--i, 0), 8) * 45ms);
+}
+
+/* Opening a row: tiles slide in one after another, details follow */
+.dd .row.is-open .gallery figure { animation: tile-in 0.75s var(--ease) both; animation-delay: calc(120ms + var(--i) * 70ms); }
+.dd .row.is-open .details { animation: fade-up 0.6s var(--ease) both; animation-delay: 260ms; }
+@keyframes tile-in { from { opacity: 0; transform: translateX(28px); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } }
+
+/* Touch feedback */
+@media (hover: none) { .dd .row__btn:active { background: rgba(0, 0, 0, 0.05); } }
+
+@media (max-width: 1100px) {
+  .dd .site-header { grid-template-columns: 1fr auto; }
+}
+@media (max-width: 767px) {
+  .dd .details { grid-template-columns: 1fr; gap: 14px; padding-top: 10px; }
+  .dd .details .desc { padding-right: 0; }
+  .dd .details__meta { flex-direction: row; flex-wrap: wrap; gap: 6px 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dd .intro p { opacity: 1; transform: none; filter: none; }
 }

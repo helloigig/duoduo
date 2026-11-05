@@ -1,10 +1,15 @@
 // All homepage copy lives here — edit this file to change the site.
 // Images come from the Figma "content" section (node 20:124360), exported to public/projects/.
 
-const img = (name, ratio, full) => ({ src: `/projects/${name}.webp`, ratio, ...(full ? { full: `/projects/${full}.webp` } : {}) });
-const R43 = 4 / 3;    // 800×600 frames
-const R169 = 16 / 9;  // 1920×1080 frames
-const PHONE = 402 / 874;
+// Every tile is a 4:3 image built by scripts/build-project-images.mjs (1600×1200 + an 800px version).
+const img = (name, full) => ({
+  src: `/projects/${name}.webp`,
+  small: `/projects/${name}-800.webp`,
+  ratio: 4 / 3,
+  ...(full ? { full: `/projects/${full}.webp` } : {}),
+});
+// A long web page: three sections as tiles; Pop out shows the whole page
+const page = (name) => [img(`${name}-a`, `${name}-full`), img(`${name}-b`), img(`${name}-c`)];
 
 export const SITE = {
   name: "duoduo",
@@ -40,7 +45,7 @@ export const SITE = {
       disciplines: "Website design, Expedition: Iceland feature",
       description:
         "A London biotech company building the world’s largest biological database and using AI to learn from nature.",
-      images: [img("basecamp-2", 1200 / 675), img("basecamp-1", R43), img("basecamp-3", R43)],
+      images: [img("basecamp-2"), img("basecamp-1"), img("basecamp-3")],
     },
     {
       title: "The Fenway",
@@ -49,7 +54,7 @@ export const SITE = {
       tags: ["digital", "print", "website"],
       disciplines: "Brand guidelines, Website, Mobile experience, Construction hoarding",
       description: "A destination brand for Boston’s Fenway neighbourhood.",
-      images: [img("fenway-1", R43), img("fenway-2", R169), img("fenway-3", R43), img("fenway-4", R43)],
+      images: [img("fenway-1"), img("fenway-2"), img("fenway-3"), img("fenway-4")],
     },
     {
       title: "Let’s Vision 2025",
@@ -59,16 +64,16 @@ export const SITE = {
       disciplines: "Conference identity, Invitation letter, Speaker posters",
       description:
         "SwiftGG’s developer conference for the Apple ecosystem, themed AI + Spatial Computing, held 1–2 March 2025 at Flower Port, Pudong, Shanghai.",
-      images: [img("vision-2", R43), img("vision-1", R43)],
+      images: [img("vision-2"), img("vision-1")],
     },
     {
       title: "Dify Creator Program",
       client: "Dify",
       years: "2025",
-      tags: ["digital", "website"],
+      tags: ["website"],
       disciplines: "Landing page, Creator Center dashboard",
       description: "A program for creators to publish templates and plugins on Dify and earn from them.",
-      images: [img("dify-2", 0.75, "dify-2-full")],
+      images: page("dify-2"),
     },
     {
       title: "CUTO",
@@ -77,7 +82,7 @@ export const SITE = {
       tags: ["digital"],
       disciplines: "App UI, Membership paywall",
       description: "A wallpaper app with a paid membership.",
-      images: [img("cuto-1", R43)],
+      images: [img("cuto-1")],
     },
   ],
 
@@ -91,7 +96,7 @@ export const SITE = {
       disciplines: "Brand mark, App UI, Conversational flow",
       description:
         "An iOS app where users describe the widget they want in a chat, such as daily English vocabulary, and AI builds it, with controls for size, update frequency and style.",
-      images: [img("widget-0", R43), img("widget-1", PHONE), img("widget-2", PHONE), img("widget-3", PHONE), img("widget-4", PHONE)],
+      images: [img("widget-0"), img("widget-1"), img("widget-2"), img("widget-3"), img("widget-4")],
     },
     {
       title: "The Arsenal on the Charles",
@@ -101,7 +106,7 @@ export const SITE = {
       disciplines: "Brand book, Editorial design, Storytelling",
       description:
         "A historic campus in Watertown, Boston, now an innovation hub. The brand book, The Foundations of a Legacy, covers its editorial design and storytelling.",
-      images: [img("arsenal-1", R169), img("arsenal-2", R169)],
+      images: [img("arsenal-1"), img("arsenal-2")],
     },
     {
       title: "Ponder",
@@ -110,7 +115,7 @@ export const SITE = {
       tags: ["digital"],
       disciplines: "Product UI",
       description: "An AI research workspace that brings files, an editor and an agent together.",
-      images: [img("workspace-1", R43)],
+      images: [img("workspace-1")],
     },
     {
       title: "Illustrated Avatar Series",
@@ -119,7 +124,7 @@ export const SITE = {
       tags: ["passion"],
       disciplines: "Illustration",
       description: "A set of illustrated character avatars.",
-      images: [img("characters-1", 2496 / 1411)],
+      images: [img("characters-1")],
     },
     {
       title: "WWDC25.playground Watch Party",
@@ -128,7 +133,7 @@ export const SITE = {
       tags: ["print"],
       disciplines: "Event key visual",
       description: "A WWDC25 watch party held on 9 June 2025 in Beijing, Shanghai and Shenzhen.",
-      images: [img("wwdc-1", R43)],
+      images: [img("wwdc-1")],
     },
     {
       title: "Dify Marketplace",
@@ -137,7 +142,7 @@ export const SITE = {
       tags: ["digital", "website"],
       disciplines: "Homepage design",
       description: "Dify’s marketplace for plugins.",
-      images: [img("dify-1", 0.75, "dify-1-full")],
+      images: page("dify-1"),
     },
     {
       title: "Dify Affiliate Program",
@@ -146,7 +151,7 @@ export const SITE = {
       tags: ["digital", "website"],
       disciplines: "Landing page",
       description: "Dify’s referral and commission program.",
-      images: [img("dify-3", 0.75, "dify-3-full")],
+      images: page("dify-3"),
     },
     {
       title: "Dify Developer",
@@ -155,7 +160,7 @@ export const SITE = {
       tags: ["digital", "website"],
       disciplines: "Landing page, Product UI illustrations",
       description: "A developer-facing product page covering workflows, debugging and plugins.",
-      images: [img("dify-4", 0.75, "dify-4-full")],
+      images: page("dify-4"),
     },
     {
       title: "BLOC1",
@@ -164,7 +169,7 @@ export const SITE = {
       tags: ["digital"],
       disciplines: "App UI, Visual system",
       description: "A membership app for a climbing gym, with a class calendar, passes and a wallet.",
-      images: [img("bloc-1", R43)],
+      images: [img("bloc-1")],
     },
     {
       title: "ult",
@@ -174,7 +179,7 @@ export const SITE = {
       disciplines: "Product UI",
       description:
         "An AI networking tool that recommends people to meet from a plain-language description and your résumé.",
-      images: [img("ult-1", R43)],
+      images: [img("ult-1")],
     },
     {
       title: "Fenway Landmark Campus / 421 Park",
@@ -183,7 +188,7 @@ export const SITE = {
       tags: ["print"],
       disciplines: "Leasing deck, Wayfinding maps, Brand exploration",
       description: "A life-sciences campus in the Fenway.",
-      images: [img("data-1", R169)],
+      images: [img("data-1")],
     },
   ],
 };

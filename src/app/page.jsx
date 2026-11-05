@@ -11,6 +11,16 @@ const ALL = [
     ...SITE.selected.map((p) => ({ ...p, group: 'selected', key: slug(p.title) })),
     ...SITE.archive.map((p) => ({ ...p, group: 'archive', key: slug(p.title) })),
 ];
+let revealIO = null;
+const observeReveal = (el) => {
+    if (!el || typeof window === 'undefined' || !document.querySelector('.dd.js-motion')) return;
+    revealIO ??= new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+            if (e.isIntersecting) { e.target.dataset.in = ''; revealIO.unobserve(e.target); }
+        });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.01 });
+    revealIO.observe(el);
+};
 const isMobile = () => window.matchMedia('(max-width: 767px)').matches;
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -19,10 +29,67 @@ const openCall = (e) => {
     window.dispatchEvent(new CustomEvent('open-cal'));
 };
 
-// "[word]" in copy renders grey
+// "[word]" in copy renders grey; every word is its own span for the load-in reveal
 function Highlighted({ text }) {
-    return text.split(/\[([^\]]+)\]/g).map((part, i) =>
-        i % 2 ? <span key={i} className="hl">{part}</span> : <Fragment key={i}>{part}</Fragment>
+    let n = 0;
+    return text.split(/\[([^\]]+)\]/g).map((part, i) => {
+        const words = part.split(/(\s+)/).map((w, j) =>
+            /^\s+$/.test(w) || !w ? <Fragment key={j}>{w}</Fragment> : <span key={j} className="w" style={{ '--i': n++ }}>{w}</span>
+        );
+        return i % 2 ? <span key={i} className="hl">{words}</span> : <Fragment key={i}>{words}</Fragment>;
+    });
+}
+
+// Desktop: a small preview of the hovered project follows the cursor (Figma "Desktop - 100")
+function HoverPreview({ listRef, openKey }) {
+    const cardRef = useRef(null);
+    const [key, setKey] = useState(null);
+    const keyRef = useRef(null);
+    const target = useRef({ x: 0, y: 0 });
+    const pos = useRef({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const list = listRef.current;
+        const fine = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)');
+        if (!list || !fine.matches) return;
+        let raf = 0;
+        const still = reducedMotion();
+        const tick = () => {
+            const k = still ? 1 : 0.18;
+            pos.current.x += (target.current.x - pos.current.x) * k;
+            pos.current.y += (target.current.y - pos.current.y) * k;
+            if (cardRef.current) cardRef.current.style.transform = `translate3d(${pos.current.x}px, ${pos.current.y}px, 0)`;
+            raf = requestAnimationFrame(tick);
+        };
+        const onMove = (e) => {
+            const btn = e.target.closest?.('.row__btn');
+            const row = btn?.closest('.row');
+            const k = row && !row.classList.contains('is-open') ? row.dataset.key : null;
+            target.current = { x: e.clientX + 28, y: e.clientY - 70 };
+            if (!keyRef.current && k) pos.current = { ...target.current };
+            if (keyRef.current !== k) { keyRef.current = k; setKey(k); }
+        };
+        const onLeave = () => { keyRef.current = null; setKey(null); };
+        list.addEventListener('pointermove', onMove);
+        list.addEventListener('pointerleave', onLeave);
+        window.addEventListener('scroll', onLeave, { passive: true });
+        raf = requestAnimationFrame(tick);
+        return () => {
+            cancelAnimationFrame(raf);
+            list.removeEventListener('pointermove', onMove);
+            list.removeEventListener('pointerleave', onLeave);
+            window.removeEventListener('scroll', onLeave);
+        };
+    }, [listRef]);
+
+    const shown = key && key !== openKey;
+    return (
+        <div className={`hover-preview${shown ? ' is-on' : ''}`} ref={cardRef} aria-hidden="true">
+            {ALL.filter((p) => p.images?.length).map((p) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={p.key} src={p.images[0].src} alt="" className={p.key === key ? 'is-active' : ''} loading="lazy" decoding="async" />
+            ))}
+        </div>
     );
 }
 
@@ -42,8 +109,9 @@ function Tile({ img, alt, className = 'tile' }) {
         <img
             className={`${className}${loaded ? ' is-loaded' : ''}`}
             src={img.src}
+            srcSet={img.small ? `${img.small} 800w, ${img.src} 1600w` : undefined}
+            sizes="(max-width: 767px) 291px, 571px"
             alt={alt}
-            style={{ aspectRatio: img.ratio }}
             loading="lazy"
             decoding="async"
             draggable={false}
@@ -114,7 +182,7 @@ function Gallery({ project, onOpenImage }) {
                 aria-label={`${project.title} images`}
             >
                 {images.map((img, i) => (
-                    <figure key={img.src}>
+                    <figure key={img.src} style={{ '--i': i }}>
                         <button
                             type="button"
                             className="tile-btn"
@@ -137,44 +205,36 @@ function Gallery({ project, onOpenImage }) {
     );
 }
 
-function Row({ project, open, onToggle, onOpenImage, hidden }) {
+function Row({ project, open, onToggle, onOpenImage, hidden, index }) {
     const id = `panel-${project.key}`;
     const showClient = project.client && project.client !== project.title;
     return (
-        <li className={`row${open ? ' is-open' : ''}`} hidden={hidden} id={project.key} data-key={project.key}>
+        <li ref={observeReveal} className={`row${open ? ' is-open' : ''}`} hidden={hidden} id={project.key} data-key={project.key} style={{ '--i': index }}>
             <button className="row__btn h2" type="button" aria-expanded={open} aria-controls={id} onClick={onToggle}>
                 <span className="row__name"><span>{project.title}</span><Dots tags={project.tags} /></span>
                 <span className="row__client">{showClient ? project.client : ''}</span>
-                <span className="row__years">
-                    {project.years}
-                    <span className="row__toggle" aria-hidden="true">{open ? '−' : '+'}</span>
-                </span>
+                <span className="row__years">{project.years}</span>
             </button>
             <div className="row__panel" id={id} inert={!open}>
                 <div className="row__inner">
                     <div className="row__content">
                         {project.images?.length ? <Gallery project={project} onOpenImage={onOpenImage} /> : null}
                         <div className="details">
-                            <div className="meta">
-                                <span className="h3 meta__disc">{project.disciplines}</span>
+                            <p className="h2 desc">{project.description}</p>
+                            <div className="details__meta">
+                                <span className="h3 muted">Scope</span>
+                                <span className="h3">{project.disciplines}</span>
+                            </div>
+                            <div className="details__meta">
                                 {project.links?.length ? (
                                     <>
-                                        <span className="h3">External links</span>
-                                        <div className="links">
-                                            {project.links.map((l) => (
-                                                <a key={l.href} className="h3" href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
-                                            ))}
-                                        </div>
+                                        <span className="h3 muted">Links</span>
+                                        {project.links.map((l) => (
+                                            <a key={l.href} className="h3" href={l.href} target="_blank" rel="noopener noreferrer">{l.label}</a>
+                                        ))}
                                     </>
                                 ) : null}
                             </div>
-                            {project.description ? <p className="h2 desc">{project.description}</p> : null}
-                            {project.images?.length ? (
-                                <button className="popout h3" type="button" onClick={() => onOpenImage(0)}>
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="/pop-out.svg" alt="" width={16} height={15} />Pop out
-                                </button>
-                            ) : null}
                         </div>
                     </div>
                 </div>
@@ -248,7 +308,7 @@ function Lightbox({ view, onClose }) {
                         </div>
                     ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img key={img.src} className="tile is-loaded" src={img.src} alt={`${project.title}, image ${i + 1}`} style={{ aspectRatio: img.ratio }} />
+                        <img key={img.src} className="tile tile--natural is-loaded" src={img.src} alt={`${project.title}, image ${i + 1}`} style={{ aspectRatio: img.ratio }} />
                     )
                 )}
             </div>
@@ -266,12 +326,40 @@ export default function Home() {
     const rootRef = useRef(null);
     const sheetRef = useRef(null);
 
-    // Desktop header slides in once the list covers the intro
+    // Scroll: header slides in once the list covers the intro; the intro recedes as it's covered
     useEffect(() => {
-        const onScroll = () => setHeaderOn((listRef.current?.getBoundingClientRect().top ?? 999) <= 58);
+        let raf = 0;
+        const update = () => {
+            raf = 0;
+            const list = listRef.current;
+            const intro = introRef.current;
+            if (!list || !intro) return;
+            const top = list.getBoundingClientRect().top;
+            setHeaderOn(top <= 58);
+            const start = intro.offsetHeight + (isMobile() ? 72 : 124);
+            const p = Math.min(1, Math.max(0, 1 - (top - (isMobile() ? 65 : 0)) / start));
+            rootRef.current?.style.setProperty('--intro-p', p.toFixed(3));
+        };
+        const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+        const sheet = sheetRef.current;
         window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-        return () => window.removeEventListener('scroll', onScroll);
+        sheet?.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        update();
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('scroll', onScroll);
+            sheet?.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
+        };
+    }, []);
+
+    // Rows fade up as they scroll into view (only once JS is running, so nothing is hidden without it)
+    useEffect(() => {
+        const root = rootRef.current;
+        if (!root || reducedMotion()) return;
+        root.classList.add('js-motion');
+        root.querySelectorAll('.row, .list__head, .brief, .list__foot').forEach(observeReveal);
     }, []);
 
     // Intro height decides where the list starts
@@ -330,11 +418,13 @@ export default function Home() {
     const list = (group) => {
         const projects = ALL.filter((p) => p.group === group);
         const visible = projects.filter((p) => !isHidden(p)).length;
+        let shown = 0;
         return (
-            <ul className="projects">
+            <ul className="projects" data-filter={active.join(' ')}>
                 {projects.map((p) => (
                     <Row
-                        key={p.key}
+                        key={`${p.key}-${active.join('.')}`}
+                        index={isHidden(p) ? 0 : shown++}
                         project={p}
                         open={openKey === p.key}
                         hidden={isHidden(p)}
@@ -355,9 +445,9 @@ export default function Home() {
     return (
         <div className="dd" ref={rootRef}>
             <header className={`site-header${headerOn ? ' is-visible' : ''}`} aria-hidden={!headerOn}>
-                <a className="h1" href="#top" tabIndex={headerOn ? 0 : -1}>{SITE.name}</a>
-                <span className="h1 site-header__role">{SITE.role}</span>
-                <a className="h1 muted" href={SITE.contact} onClick={openCall} tabIndex={headerOn ? 0 : -1}>Contact</a>
+                <a className="h2" href="#top" tabIndex={headerOn ? 0 : -1}>{SITE.name}</a>
+                <span className="h2 muted site-header__role">{SITE.role}</span>
+                <a className="h2 muted" href={SITE.contact} onClick={openCall} tabIndex={headerOn ? 0 : -1}>Contact</a>
             </header>
 
             <main id="top">
@@ -405,6 +495,7 @@ export default function Home() {
                 </div>
             </main>
 
+            <HoverPreview listRef={listRef} openKey={openKey} />
             <Lightbox view={lightbox} onClose={closeLightbox} />
         </div>
     );
