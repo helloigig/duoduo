@@ -26,13 +26,14 @@ export const SITE = {
     "which gives the studio a refined visual sensibility alongside rigorous structural thinking, so every product we deliver is " +
     "both considered in its craft and clear in its logic.",
 
-  // Tag order = dot order. Colours come from the Figma "pops" styles.
+  // Filter categories, from the projects' scopes. Tag order = dot order; colours are the Figma "pops" plus one violet.
   tags: [
-    { id: "digital", label: "Digital", color: "#C7578F" },
-    { id: "print", label: "Print", color: "#F5A300" },
+    { id: "brand", label: "Brand", color: "#C7578F" },
     { id: "website", label: "Website", color: "#235789" },
-    { id: "passion", label: "Passion", color: "#28A472" },
-    { id: "undisclosed", label: "Undisclosed", color: "#C1292E" },
+    { id: "app", label: "App", color: "#28A472" },
+    { id: "product", label: "Product UI", color: "#7A5CC2" },
+    { id: "print", label: "Print", color: "#F5A300" },
+    { id: "illustration", label: "Illustration", color: "#C1292E" },
   ],
 
   // images: { src, ratio (w/h), full? (long page shown by Pop out) }
@@ -41,7 +42,7 @@ export const SITE = {
       title: "Basecamp Research",
       client: "Basecamp Research",
       years: "2024", // TODO: confirm (was "2024?")
-      tags: ["digital", "website"],
+      tags: ["website"],
       disciplines: "Website design, Expedition: Iceland feature",
       description:
         "A London biotech company building the world’s largest biological database and using AI to learn from nature.",
@@ -51,7 +52,7 @@ export const SITE = {
       title: "The Fenway",
       client: "The Fenway",
       years: "2023", // TODO: confirm (was "2023?")
-      tags: ["digital", "print", "website"],
+      tags: ["brand", "website", "app"],
       disciplines: "Brand guidelines, Website, Mobile experience, Construction hoarding",
       description: "A destination brand for Boston’s Fenway neighbourhood.",
       images: [img("fenway-1"), img("fenway-2"), img("fenway-3"), img("fenway-4")],
@@ -60,7 +61,7 @@ export const SITE = {
       title: "Let’s Vision 2025",
       client: "SwiftGG",
       years: "2025",
-      tags: ["digital", "print"],
+      tags: ["brand", "print"],
       disciplines: "Conference identity, Invitation letter, Speaker posters",
       description:
         "SwiftGG’s developer conference for the Apple ecosystem, themed AI + Spatial Computing, held 1–2 March 2025 at Flower Port, Pudong, Shanghai.",
@@ -79,7 +80,7 @@ export const SITE = {
       title: "CUTO",
       client: "CUTO",
       years: "2026",
-      tags: ["digital"],
+      tags: ["app"],
       disciplines: "App UI, Membership paywall",
       description: "A wallpaper app with a paid membership.",
       images: [img("cuto-1")],
@@ -92,7 +93,7 @@ export const SITE = {
       title: "AI Widget Creator App",
       client: "", // name TBC
       years: "2026",
-      tags: ["digital"],
+      tags: ["brand", "app"],
       disciplines: "Brand mark, App UI, Conversational flow",
       description:
         "An iOS app where users describe the widget they want in a chat, such as daily English vocabulary, and AI builds it, with controls for size, update frequency and style.",
@@ -102,7 +103,7 @@ export const SITE = {
       title: "The Arsenal on the Charles",
       client: "The Arsenal on the Charles",
       years: "2026",
-      tags: ["print"],
+      tags: ["brand", "print"],
       disciplines: "Brand book, Editorial design, Storytelling",
       description:
         "A historic campus in Watertown, Boston, now an innovation hub. The brand book, The Foundations of a Legacy, covers its editorial design and storytelling.",
@@ -112,7 +113,7 @@ export const SITE = {
       title: "Ponder",
       client: "Ponder",
       years: "2026",
-      tags: ["digital"],
+      tags: ["product"],
       disciplines: "Product UI",
       description: "An AI research workspace that brings files, an editor and an agent together.",
       images: [img("workspace-1")],
@@ -121,7 +122,7 @@ export const SITE = {
       title: "Illustrated Avatar Series",
       client: "Self initiated",
       years: "2026",
-      tags: ["passion"],
+      tags: ["illustration"],
       disciplines: "Illustration",
       description: "A set of illustrated character avatars.",
       images: [img("characters-1")],
@@ -130,7 +131,7 @@ export const SITE = {
       title: "WWDC25.playground Watch Party",
       client: "WWDC25.playground",
       years: "2025",
-      tags: ["print"],
+      tags: ["brand", "print"],
       disciplines: "Event key visual",
       description: "A WWDC25 watch party held on 9 June 2025 in Beijing, Shanghai and Shenzhen.",
       images: [img("wwdc-1")],
@@ -139,7 +140,7 @@ export const SITE = {
       title: "Dify Marketplace",
       client: "Dify",
       years: "2025",
-      tags: ["digital", "website"],
+      tags: ["website"],
       disciplines: "Homepage design",
       description: "Dify’s marketplace for plugins.",
       images: page("dify-1"),
@@ -148,7 +149,7 @@ export const SITE = {
       title: "Dify Affiliate Program",
       client: "Dify",
       years: "2025",
-      tags: ["digital", "website"],
+      tags: ["website"],
       disciplines: "Landing page",
       description: "Dify’s referral and commission program.",
       images: page("dify-3"),
@@ -157,7 +158,7 @@ export const SITE = {
       title: "Dify Developer",
       client: "Dify",
       years: "2025",
-      tags: ["digital", "website"],
+      tags: ["website", "product"],
       disciplines: "Landing page, Product UI illustrations",
       description: "A developer-facing product page covering workflows, debugging and plugins.",
       images: page("dify-4"),
@@ -166,7 +167,7 @@ export const SITE = {
       title: "BLOC1",
       client: "BLOC1",
       years: "2025",
-      tags: ["digital"],
+      tags: ["app"],
       disciplines: "App UI, Visual system",
       description: "A membership app for a climbing gym, with a class calendar, passes and a wallet.",
       images: [img("bloc-1")],
@@ -175,7 +176,7 @@ export const SITE = {
       title: "ult",
       client: "ult",
       years: "2025",
-      tags: ["digital"],
+      tags: ["product"],
       disciplines: "Product UI",
       description:
         "An AI networking tool that recommends people to meet from a plain-language description and your résumé.",
@@ -185,7 +186,7 @@ export const SITE = {
       title: "Fenway Landmark Campus / 421 Park",
       client: "",
       years: "2023", // TODO: confirm (was "2023?")
-      tags: ["print"],
+      tags: ["brand", "print"],
       disciplines: "Leasing deck, Wayfinding maps, Brand exploration",
       description: "A life-sciences campus in the Fenway.",
       images: [img("data-1")],

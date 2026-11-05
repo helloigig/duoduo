@@ -125,7 +125,7 @@ function Dots({ tags }) {
     const label = tags.map((id) => tagById[id]?.label).join(', ');
     return (
         <span className="dots" role="img" aria-label={label} title={label}>
-            {tags.map((id) => <i key={id} style={{ '--c': tagById[id]?.color }} />)}
+            {tags.map((id) => <i key={id} style={{ '--c': tagById[id]?.color }}><span className="h3">{tagById[id]?.label}</span></i>)}
         </span>
     );
 }
