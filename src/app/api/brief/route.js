@@ -1,17 +1,25 @@
-export async function POST(request) {
-    const { messages, system } = await request.json();
+import { SYS } from '@/lib/prompt';
 
-    // Convert from Anthropic-style messages to Gemini format
+// The system prompt lives on the server only — the client sends just the conversation,
+// so this endpoint can't be used as an open proxy to the Gemini key with a custom prompt.
+const MAX_MESSAGES = 6;
+const MAX_CHARS = 4000;
+
+export async function POST(request) {
+    let body;
+    try { body = await request.json(); }
+    catch { return Response.json({ error: 'Invalid request.' }, { status: 400 }); }
+
+    const messages = Array.isArray(body?.messages) ? body.messages : [];
+    const valid =
+        messages.length > 0 &&
+        messages.length <= MAX_MESSAGES &&
+        messages.every((m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.length <= MAX_CHARS);
+    if (!valid) return Response.json({ error: 'Please keep your brief under 4,000 characters.' }, { status: 400 });
+
     const contents = messages.map((msg) => ({
         role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: Array.isArray(msg.content)
-            ? msg.content.map((part) => {
-                  if (part.type === 'text') return { text: part.text };
-                  if (part.type === 'image')
-                      return { inlineData: { mimeType: part.source.media_type, data: part.source.data } };
-                  return { text: '' };
-              })
-            : [{ text: msg.content }],
+        parts: [{ text: msg.content }],
     }));
 
     const res = await fetch(
@@ -20,7 +28,7 @@ export async function POST(request) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                system_instruction: { parts: [{ text: system }] },
+                system_instruction: { parts: [{ text: SYS }] },
                 contents,
                 generationConfig: { maxOutputTokens: 2000 },
             }),
@@ -35,6 +43,5 @@ export async function POST(request) {
 
     const parts = data.candidates?.[0]?.content?.parts || [];
     const text = parts.map((p) => p.text || '').join('');
-    console.log('[brief] raw text:', text);
     return Response.json({ text });
 }
